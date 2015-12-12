@@ -17,15 +17,23 @@ public final class Utils {
         return new Values(langs[random.nextInt(langs.length)], hashTags[random.nextInt(hashTags.length)],
                 LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond(), initTimestamp);
     }
-//todo enusre initTimestamp > timestamp
+
+    //todo enusre initTimestamp > timestamp
     public static long calcWindow(long windowLength_s, long windowAdvance_s, long initTimestamp, long timestamp) {
 
-        long window =  windowLength_s;
+        long window = windowLength_s;
         long newTimestamp = (timestamp - initTimestamp);
 
-        if ((newTimestamp - windowLength_s) >= 0) {
-            window = windowLength_s + (((newTimestamp - windowLength_s) / windowAdvance_s) + 1) * windowAdvance_s;
+        if (newTimestamp < 0) {
+            window = -windowLength_s;
+            if ((newTimestamp + windowLength_s) >= 0) {
+                window = -windowLength_s - (((newTimestamp + windowLength_s) / windowAdvance_s) + 1) * windowAdvance_s;
 
+            }
+        } else {
+            if ((newTimestamp - windowLength_s) >= 0) {
+                window = windowLength_s + (((newTimestamp - windowLength_s) / windowAdvance_s) + 1) * windowAdvance_s;
+            }
         }
 
         return window;
