@@ -8,7 +8,7 @@ import java.util.Random;
 
 public final class Utils {
 
-    public static Values tweet(Long initTimestamp) {
+    public static Values tweet(long initTimestamp) {
 
         final String[] hashTags = new String[]{"SemperFi", "PewDiePie", "House", "Benzino"};
         final String[] langs = new String[]{"en", "es", "it", "pt"};
