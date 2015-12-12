@@ -43,7 +43,7 @@ public class WindowAssignerBolt extends BaseRichBolt {
             return;
         }
 
-        long window = Utils.calcWindow(windowLength_s, windowAdvance_s, initTimestamp, timestamp);
+        long window = Utils.calcWindow(windowAdvance_s, initTimestamp, timestamp);
         _collector.emit(new Values(window));
         LOGGER.info("window assigned:"+window);
 

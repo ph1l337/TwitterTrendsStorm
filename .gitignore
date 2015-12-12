@@ -2,3 +2,4 @@
 log.txt
 .idea/
 target/
+config.properties
