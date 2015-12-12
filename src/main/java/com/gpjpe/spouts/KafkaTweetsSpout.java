@@ -6,12 +6,17 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichSpout;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
-import com.gpjpe.helpers.Utils;
+import org.apache.log4j.Logger;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
-import org.apache.log4j.Logger;
+import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Arrays;
+
+import com.gpjpe.helpers.Utils;
+
 
 public class KafkaTweetsSpout extends BaseRichSpout {
 
@@ -48,6 +53,8 @@ public class KafkaTweetsSpout extends BaseRichSpout {
         if (this.languagesToWatch.contains(tweetLanguage)) {
             this._collector.emit(tweet);
             LOGGER.info(tweet.toString());
+        }else{
+            LOGGER.info("Tweet is not of interest");
         }
     }
 }
