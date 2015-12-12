@@ -19,21 +19,15 @@ public final class Utils {
     }
 
     //todo enusre initTimestamp > timestamp
-    public static long calcWindow(long windowLength_s, long windowAdvance_s, long initTimestamp, long timestamp) {
+    public static long calcWindow(long windowLength_s, long initTimestamp, long timestamp) {
 
-        long window = windowLength_s;
+        long window;
         long newTimestamp = (timestamp - initTimestamp);
 
-        if (newTimestamp < 0) {
-            window = -windowLength_s;
-            if ((newTimestamp + windowLength_s) >= 0) {
-                window = -windowLength_s - (((newTimestamp + windowLength_s) / windowAdvance_s) + 1) * windowAdvance_s;
-
-            }
-        } else {
-            if ((newTimestamp - windowLength_s) >= 0) {
-                window = windowLength_s + (((newTimestamp - windowLength_s) / windowAdvance_s) + 1) * windowAdvance_s;
-            }
+        if(newTimestamp>=0){
+            window = ((newTimestamp/windowLength_s)+1)*windowLength_s;
+        }else{
+            window = (newTimestamp/windowLength_s)*windowLength_s;
         }
 
         return window;
