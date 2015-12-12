@@ -21,12 +21,13 @@ public class TwitterTrendTopology {
     private static final String TOPOLOGY_NAME = "Top3";
 
     public static void main(String[] args) {
-        System.out.println("Arguments:");
+
+        //TODO: Check input args
+        System.out.println("Arguments :\n");
         for (String arg : args) {
-            System.out.print(arg);
+            System.out.print(arg+"\n");
         }
         String[] languagesToWatch = args[0].split(",");
-
         long windowAdvance_s = Long.parseLong((args[2].split(",")[1]));
         long windowSize_s = Long.parseLong((args[2].split(",")[0]));
 
@@ -36,11 +37,13 @@ public class TwitterTrendTopology {
                     +"\n window advance:" +windowAdvance_s);
         }
 
+        String outputFolder = args[3];
+
         TopologyBuilder builder = new TopologyBuilder();
 
         builder.setSpout("spout", new KafkaTweetsSpout(languagesToWatch), 1);
         builder.setBolt("windows", new WindowAssignerBolt(windowSize_s),8).shuffleGrouping("spout");
-        builder.setBolt("counter", new HashtagCountBolt()).fieldsGrouping("windows", new Fields("lang"));
+        builder.setBolt("counter", new HashtagCountBolt(outputFolder)).fieldsGrouping("windows", new Fields("lang"));
 //        builder.setBolt("split", new SplitSentence(), 8).shuffleGrouping("spout");
 //        builder.setBolt("count", new WordCount(), 12).fieldsGrouping("split", new Fields("word"));
 
