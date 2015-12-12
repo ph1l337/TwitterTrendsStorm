@@ -33,4 +33,19 @@ public final class Utils {
         return window;
     }
 
+
+   /* public static long[] calcWindow(long windowLength_s, long windowAdvance_s, long initTimestamp, long timestamp) {
+
+        long window[];
+        long newTimestamp = (timestamp - initTimestamp);
+
+        if(newTimestamp>=0){
+            window = ((newTimestamp/windowLength_s)+1)*windowLength_s;
+        }else{
+            window = (newTimestamp/windowLength_s)*windowLength_s;
+        }
+
+        return window;
+    }*/
+
 }
