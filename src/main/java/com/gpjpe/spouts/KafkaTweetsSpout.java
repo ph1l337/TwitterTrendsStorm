@@ -4,26 +4,32 @@ import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichSpout;
+import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
+import com.gpjpe.helpers.Utils;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
+import org.apache.log4j.Logger;
 
 public class KafkaTweetsSpout extends BaseRichSpout {
 
-//    private final String[] hashTags = new String[]{"SemperFi", "PewDiePie", "House", "Benzino"};
+    private final static Logger LOGGER = Logger.getLogger(KafkaTweetsSpout.class.getName());
 
-    SpoutOutputCollector _collector;
-    Set<String> languages;
+    private SpoutOutputCollector _collector;
+    private Set<String> languagesToWatch;
+    private long firstTweetTimestamp;
+    private static final long UNSET = -1;
 
-
-    public KafkaTweetsSpout(String[] languages){
-        this.languages.addAll(Arrays.asList(languages));
+    public KafkaTweetsSpout(String[] languagesToWatch) {
+        this.languagesToWatch = new HashSet<String>();
+        this.languagesToWatch.addAll(Arrays.asList(languagesToWatch));
+        this.firstTweetTimestamp = UNSET;
     }
 
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-
+        outputFieldsDeclarer.declare(new Fields("lang", "hashtag", "timestamp", "initTimestamp"));
     }
 
     public void open(Map map, TopologyContext topologyContext, SpoutOutputCollector spoutOutputCollector) {
@@ -31,16 +37,17 @@ public class KafkaTweetsSpout extends BaseRichSpout {
     }
 
     public void nextTuple() {
-//        String[] sentences = new String[]{ "the cow jumped over the moon", "an apple a day keeps the doctor away",
-//                "four score and seven years ago", "snow white and the seven dwarfs", "i am at two with nature" };
-//        String sentence = sentences[_rand.nextInt(sentences.length)];
 
-        //read from kafka
+        if (this.firstTweetTimestamp == UNSET) {
+            this.firstTweetTimestamp = LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond();
+        }
 
+        Values tweet = Utils.tweet(this.firstTweetTimestamp);
+        String tweetLanguage = (String) tweet.get(0);
 
-//        _collector.emit(new Values(sentence));
-
-
-
+        if (this.languagesToWatch.contains(tweetLanguage)) {
+            this._collector.emit(tweet);
+            LOGGER.info(tweet.toString());
+        }
     }
 }
