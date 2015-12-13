@@ -70,15 +70,13 @@ public class TwitterTrendTopology {
                     + "\n window advance:" + windowAdvanceSeconds);
         }
 
-        String outputFolder = args[3];
-
         TopologyBuilder builder = new TopologyBuilder();
         AppConfig appConfig = new AppConfig();
         String topic = appConfig.getProperty(CONFIG.KAFKA_TOPIC, "TweetStream");
 
         builder.setSpout("spout", new KafkaTweetsSpout(languagesToWatch, zookeeperURI, topic), 1);
         builder.setBolt("windows", new WindowAssignerBolt(windowSizeSeconds),8).shuffleGrouping("spout");
-        builder.setBolt("counter", new HashtagCountBolt(outputFolder)).fieldsGrouping("windows", new Fields("lang"));
+        builder.setBolt("counter", new HashtagCountBolt(storagePath)).fieldsGrouping("windows", new Fields("lang"));
 
         Config conf = new Config();
         conf.setDebug(true);
