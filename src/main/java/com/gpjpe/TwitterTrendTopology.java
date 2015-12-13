@@ -1,9 +1,11 @@
 package com.gpjpe;
 
-
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.tuple.Fields;
+import com.gpjpe.bolts.HashtagCountBolt;
+import com.gpjpe.bolts.WindowAssignerBolt;
 import com.gpjpe.spouts.KafkaTweetsSpout;
 import org.apache.log4j.Logger;
 
@@ -29,7 +31,7 @@ public class TwitterTrendTopology {
                     String.format("Expected Zookeeper URI format is [IP:PORT], got %s", params[1]));
         }
 
-        if (!params[2].contains(",")){
+        if (!params[2].contains(",")) {
             messages.add(
                     String.format("Expected Window Configuration format is [Size,Slide], got %s", params[1]));
         }
@@ -68,22 +70,24 @@ public class TwitterTrendTopology {
                     + "\n window advance:" + windowAdvanceSeconds);
         }
 
+        String outputFolder = args[3];
+
         TopologyBuilder builder = new TopologyBuilder();
         AppConfig appConfig = new AppConfig();
         String topic = appConfig.getProperty(CONFIG.KAFKA_TOPIC, "TweetStream");
 
         builder.setSpout("spout", new KafkaTweetsSpout(languagesToWatch, zookeeperURI, topic), 1);
-//        builder.setBolt("windows", new WindowAssignerBolt(windowSizeSeconds),8).shuffleGrouping("spout");
-//        builder.setBolt("counter", new HashtagCountBolt()).fieldsGrouping("windows", new Fields("lang"));
-//        builder.setBolt("split", new SplitSentence(), 8).shuffleGrouping("spout");
-//        builder.setBolt("count", new WordCount(), 12).fieldsGrouping("split", new Fields("word"));
+        builder.setBolt("windows", new WindowAssignerBolt(windowSizeSeconds),8).shuffleGrouping("spout");
+        builder.setBolt("counter", new HashtagCountBolt(outputFolder)).fieldsGrouping("windows", new Fields("lang"));
 
         Config conf = new Config();
         conf.setDebug(true);
 
+        //TODO: submit to running storm topology
         LocalCluster cluster = new LocalCluster();
         cluster.submitTopology(topologyName, conf, builder.createTopology());
 
+        //TODO: remove for deployment
         try {
             Thread.sleep(60000);
         } catch (InterruptedException e) {
