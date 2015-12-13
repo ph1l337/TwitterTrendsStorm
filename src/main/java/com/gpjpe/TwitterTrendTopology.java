@@ -16,7 +16,6 @@ import java.util.List;
 public class TwitterTrendTopology {
 
     private final static Logger LOGGER = Logger.getLogger(TwitterTrendTopology.class.getName());
-    private static final String TOPOLOGY_NAME = "Top3";
 
     public static void validateParameters(String[] params){
 

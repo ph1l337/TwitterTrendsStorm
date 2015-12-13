@@ -6,18 +6,15 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichSpout;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
-import com.gpjpe.domain.reader.IStreamReader;
 import com.gpjpe.domain.reader.KafkaStreamReader;
 import org.apache.log4j.Logger;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
-import java.util.Arrays;
-
-import com.gpjpe.helpers.Utils;
 
 
 public class KafkaTweetsSpout extends BaseRichSpout {
@@ -32,7 +29,7 @@ public class KafkaTweetsSpout extends BaseRichSpout {
     private String zookeeperURI;
     private String topic;
 
-    public  KafkaTweetsSpout(String[] languagesToWatch, String zookeeperURI, String topic) {
+    public KafkaTweetsSpout(String[] languagesToWatch, String zookeeperURI, String topic) {
         this.languagesToWatch = new HashSet<>();
         this.languagesToWatch.addAll(Arrays.asList(languagesToWatch));
         this.firstTweetTimestamp = UNSET;
@@ -51,7 +48,7 @@ public class KafkaTweetsSpout extends BaseRichSpout {
         this.streamReader.run(1);
     }
 
-    public void close(){
+    public void close() {
         this.streamReader.shutdown();
     }
 
@@ -76,11 +73,11 @@ public class KafkaTweetsSpout extends BaseRichSpout {
                 } else {
                     LOGGER.debug("Tweet is not of interest");
                 }
-            }else{
+            } else {
                 //no work, put CPU to sleep for a spell
                 Thread.sleep(1);
             }
-        }catch(Exception e){
+        } catch (Exception e) {
             _collector.reportError(e);
             LOGGER.error(e);
         }

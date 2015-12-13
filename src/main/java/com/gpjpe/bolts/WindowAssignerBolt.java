@@ -25,10 +25,9 @@ public class WindowAssignerBolt extends BaseRichBolt {
 
     public WindowAssignerBolt(long windowLengthSeconds) {
         if (windowLengthSeconds <= 0){
-            throw new IllegalArgumentException("0 and negative values not allowed.\n received: " + windowLengthSeconds);
+            throw new IllegalArgumentException("0 and negative values not allowed.\n Received: " + windowLengthSeconds);
         }
         this.windowLengthSeconds = windowLengthSeconds;
-
     }
 
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
