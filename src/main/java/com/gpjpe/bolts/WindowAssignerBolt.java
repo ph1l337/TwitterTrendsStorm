@@ -17,18 +17,17 @@ public class WindowAssignerBolt extends BaseRichBolt {
     private static final long DEFAULT_WINDOW_LENGTH_S = 300;
 
     private OutputCollector _collector;
-    private final long windowLength_s;
+    private final long windowLengthSeconds;
 
     public WindowAssignerBolt() {
         this(DEFAULT_WINDOW_LENGTH_S);
     }
 
-    public WindowAssignerBolt(long windowLength_s) {
-        if (windowLength_s <= 0){
-            throw new IllegalArgumentException("0 and negative values not allowed.\n received: " + windowLength_s);
+    public WindowAssignerBolt(long windowLengthSeconds) {
+        if (windowLengthSeconds <= 0){
+            throw new IllegalArgumentException("0 and negative values not allowed.\n Received: " + windowLengthSeconds);
         }
-        this.windowLength_s = windowLength_s;
-
+        this.windowLengthSeconds = windowLengthSeconds;
     }
 
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
@@ -40,24 +39,24 @@ public class WindowAssignerBolt extends BaseRichBolt {
         long initTimestamp = (Long) tuple.getValueByField("initTimestamp");
 
         if (timestamp - initTimestamp < 0) {
-            LOGGER.warn("dropped tuple" + tuple.getMessageId());
+            LOGGER.warn("Dropped tuple" + tuple.getMessageId());
             return;
         }
 
-        long window = Utils.calcWindow(windowLength_s, initTimestamp, timestamp);
+        long window = Utils.calcWindow(windowLengthSeconds, initTimestamp, timestamp);
         _collector.emit(new Values(
                 tuple.getValueByField("lang"),
                 tuple.getValueByField("hashtag"),
                 tuple.getValueByField("timestamp"),
                 tuple.getValueByField("initTimestamp"),
                 window));
-        LOGGER.info("window assigned:"+window);
+
+        LOGGER.debug("Window Assigned:" + window);
 
     }
 
 
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
         outputFieldsDeclarer.declare(new Fields("lang", "hashtag", "timestamp", "initTimestamp","window"));
-
     }
 }
