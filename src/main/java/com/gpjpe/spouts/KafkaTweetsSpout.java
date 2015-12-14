@@ -7,11 +7,8 @@ import backtype.storm.topology.base.BaseRichSpout;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import com.gpjpe.domain.reader.KafkaStreamReader;
-import com.gpjpe.helpers.Utils;
 import org.apache.log4j.Logger;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -55,10 +52,6 @@ public class KafkaTweetsSpout extends BaseRichSpout {
 
     public void nextTuple() {
 
-//        if (this.firstTweetTimestamp == UNSET) {
-//            this.firstTweetTimestamp = LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond();
-//        }
-
         try {
             String tweetString = streamReader.nextTweet();
 
@@ -88,6 +81,7 @@ public class KafkaTweetsSpout extends BaseRichSpout {
 //            if (!this.languagesToWatch.contains((String)tweet.get(0))){
 //                this._collector.emit(tweet);
 //            }
+
         } catch (Exception e) {
             _collector.reportError(e);
             LOGGER.error(e);
