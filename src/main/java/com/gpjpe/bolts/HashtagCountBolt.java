@@ -21,7 +21,6 @@ public class HashtagCountBolt extends BaseRichBolt {
     private Long currentWindow = null;
 
 
-
     private OutputCollector _collector;
 
 
@@ -29,7 +28,7 @@ public class HashtagCountBolt extends BaseRichBolt {
         this(DEFAULT_OUTPUT_FOLDER);
     }
 
-    public HashtagCountBolt(String outputFolder){
+    public HashtagCountBolt(String outputFolder) {
         this.outputFolder = outputFolder;
     }
 
@@ -76,8 +75,16 @@ public class HashtagCountBolt extends BaseRichBolt {
 
 
                 LOGGER.info(hashtagCountMap.toString());
+                File dir = new File(outputFolder);
+                if (!dir.exists()) {
+                    boolean result = dir.mkdir();
+                    if (!result) {
+                        LOGGER.error("Couldn't create directory: " + outputFolder);
+                    }
+                }
+
                 writer = new BufferedWriter(new OutputStreamWriter(
-                        new FileOutputStream(outputFolder+"/"+lang + ".log", true), "utf-8"));
+                        new FileOutputStream(outputFolder + "/" + lang + ".log", true), "utf-8"));
                 if (hashtagObjectslist.isEmpty()) {
                     writer.write(currentWindow + "," + "Null" + "," + 0);
                     writer.write(currentWindow + "," + "Null" + "," + 0);
@@ -85,14 +92,14 @@ public class HashtagCountBolt extends BaseRichBolt {
                     writer.newLine();
                 }
 
-                if (hashtagObjectslist.size()==1){
+                if (hashtagObjectslist.size() == 1) {
                     writer.write(currentWindow + "," + hashtagObjectslist.get(0).getHashtag() + "," + hashtagObjectslist.get(0).getCount());
                     writer.write(currentWindow + "," + "Null" + "," + 0);
                     writer.write(currentWindow + "," + "Null" + "," + 0);
                     writer.newLine();
                 }
 
-                if (hashtagObjectslist.size()==2){
+                if (hashtagObjectslist.size() == 2) {
                     writer.write(currentWindow + "," + hashtagObjectslist.get(0).getHashtag() + "," + hashtagObjectslist.get(0).getCount());
                     writer.write(currentWindow + "," + hashtagObjectslist.get(1).getHashtag() + "," + hashtagObjectslist.get(1).getCount());
                     writer.write(currentWindow + "," + "Null" + "," + 0);
@@ -118,7 +125,6 @@ public class HashtagCountBolt extends BaseRichBolt {
 
             currentWindow = tupleWindow;
             hashtagCountMap.clear();
-            LOGGER.info("hashtagCountMap cleared. should be 0 is "+hashtagCountMap.size());
         }
 
         _collector.ack(tuple);
