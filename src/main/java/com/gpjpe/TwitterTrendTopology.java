@@ -57,7 +57,6 @@ public class TwitterTrendTopology {
         String zookeeperURI = args[1];
         String[] windowConfig = args[2].split(",");
         String topologyName = args[3];
-        //TODO: pass storage path to last Bolt (in constructor)
         String storagePath = args[4];
 
         long windowAdvanceSeconds = Long.parseLong(windowConfig[0]);
@@ -73,11 +72,13 @@ public class TwitterTrendTopology {
         AppConfig appConfig = new AppConfig();
         String topic = appConfig.getProperty(CONFIG.KAFKA_TOPIC, "TweetStream");
 
+        //TODO: set parallelism for more: threads == tasks
         builder.setSpout("spout", new KafkaTweetsSpout(languagesToWatch, zookeeperURI, topic), 1);
-        builder.setBolt("windows", new WindowAssignerBolt(windowSizeSeconds),8).shuffleGrouping("spout");
-        builder.setBolt("counter", new HashtagCountBolt(storagePath)).fieldsGrouping("windows", new Fields("lang"));
+        builder.setBolt("windows", new WindowAssignerBolt(windowSizeSeconds), 8).shuffleGrouping("spout");
+        builder.setBolt("counter", new HashtagCountBolt(storagePath), 1).fieldsGrouping("windows", new Fields("lang"));
 
         Config conf = new Config();
+        conf.setNumWorkers(3);
         conf.setDebug(true);
 
         //TODO: submit to running storm topology

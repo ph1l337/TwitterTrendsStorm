@@ -7,6 +7,7 @@ import backtype.storm.topology.base.BaseRichSpout;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import com.gpjpe.domain.reader.KafkaStreamReader;
+import com.gpjpe.helpers.Utils;
 import org.apache.log4j.Logger;
 
 import java.time.LocalDateTime;
@@ -54,9 +55,9 @@ public class KafkaTweetsSpout extends BaseRichSpout {
 
     public void nextTuple() {
 
-        if (this.firstTweetTimestamp == UNSET) {
-            this.firstTweetTimestamp = LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond();
-        }
+//        if (this.firstTweetTimestamp == UNSET) {
+//            this.firstTweetTimestamp = LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond();
+//        }
 
         try {
             String tweetString = streamReader.nextTweet();
@@ -67,8 +68,12 @@ public class KafkaTweetsSpout extends BaseRichSpout {
                 Long timestamp = Long.parseLong(tuple[1].trim());
                 String hashTag = tuple[2].trim();
 
+                if(this.firstTweetTimestamp == UNSET){
+                    this.firstTweetTimestamp = timestamp;
+                }
+
                 if (this.languagesToWatch.contains(tweetLanguage)) {
-                    this._collector.emit(new Values(tweetLanguage, timestamp, hashTag));
+                    this._collector.emit(new Values(tweetLanguage, hashTag, timestamp, this.firstTweetTimestamp));
                     LOGGER.debug(tuple);
                 } else {
                     LOGGER.debug("Tweet is not of interest");
@@ -77,6 +82,12 @@ public class KafkaTweetsSpout extends BaseRichSpout {
                 //no work, put CPU to sleep for a spell
                 Thread.sleep(1);
             }
+
+//            Values tweet = Utils.tweet(this.firstTweetTimestamp);
+//
+//            if (!this.languagesToWatch.contains((String)tweet.get(0))){
+//                this._collector.emit(tweet);
+//            }
         } catch (Exception e) {
             _collector.reportError(e);
             LOGGER.error(e);

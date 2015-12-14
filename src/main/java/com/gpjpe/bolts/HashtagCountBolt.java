@@ -39,6 +39,7 @@ public class HashtagCountBolt extends BaseRichBolt {
     }
 
     public void execute(Tuple tuple) {
+
         Long tupleWindow = (Long) tuple.getValueByField("window");
 
         if (currentWindow == null) {
@@ -70,7 +71,6 @@ public class HashtagCountBolt extends BaseRichBolt {
 
             Collections.sort(hashtagObjectslist, new HashtagCountComparator());
             Collections.reverse(hashtagObjectslist);
-
 
             try {
 

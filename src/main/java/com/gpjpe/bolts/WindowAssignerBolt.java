@@ -24,7 +24,7 @@ public class WindowAssignerBolt extends BaseRichBolt {
     }
 
     public WindowAssignerBolt(long windowLengthSeconds) {
-        if (windowLengthSeconds <= 0){
+        if (windowLengthSeconds <= 0) {
             throw new IllegalArgumentException("0 and negative values not allowed.\n Received: " + windowLengthSeconds);
         }
         this.windowLengthSeconds = windowLengthSeconds;
@@ -39,7 +39,7 @@ public class WindowAssignerBolt extends BaseRichBolt {
         long initTimestamp = (Long) tuple.getValueByField("initTimestamp");
 
         if (timestamp - initTimestamp < 0) {
-            LOGGER.warn("Dropped tuple" + tuple.getMessageId());
+            LOGGER.debug("Dropped tuple" + tuple.toString());
             return;
         }
 
@@ -52,11 +52,10 @@ public class WindowAssignerBolt extends BaseRichBolt {
                 window));
 
         LOGGER.debug("Window Assigned:" + window);
-
     }
 
 
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(new Fields("lang", "hashtag", "timestamp", "initTimestamp","window"));
+        outputFieldsDeclarer.declare(new Fields("lang", "hashtag", "timestamp", "initTimestamp", "window"));
     }
 }
