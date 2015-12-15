@@ -10,6 +10,7 @@ public class WindowAssignmentTest extends TestCase{
     private final static Logger LOGGER = Logger.getLogger(WindowAssignmentTest.class.getName());
 
     public void testValidWindowAssignmentForWindowEqualsAdvance(){
+        LOGGER.info("in function: testValidWindowAssignmentForWindowEqualsAdvance");
 
         long windowSize = 30;
         long initTimestamp = 0;
@@ -26,26 +27,30 @@ public class WindowAssignmentTest extends TestCase{
     }
 
     public void testValidWindowAssignmentForAdvanceSmallerSize(){
+        LOGGER.info("in function: testValidWindowAssignmentForAdvanceSmallerSize");
         long windowSize = 50;
         long windowAdv = 40;
         long initTimestamp = 0;
 
         long[] validTimestamps = new long[] {10, 20, 30, 40, 50, 60, 70};
         Long[][] windowValues = new Long[][]{
-                new Long[]{40L,null}, //10
-                new Long[]{40L,null}, //20
-                new Long[]{40L,null}, //30
+                new Long[]{40L}, //10
+                new Long[]{40L}, //20
+                new Long[]{40L}, //30
                 new Long[]{80L,40L},  //40
                 new Long[]{80L,40L},  //50
                 new Long[]{80L,40L},  //60
-                new Long[]{80L,40L},
-                new Long[]{}}; //70
+                new Long[]{80L,40L}};    //70
+
 
         for(int i = 0; i < validTimestamps.length; i++){
             Long[] calculatedWindows = Utils.calcWindows(windowSize,windowAdv,initTimestamp, validTimestamps[i]);
 
             LOGGER.info("Computing windows for timestamp [" + validTimestamps[i] + "]");
-            LOGGER.info("Calculated windows are: "+calculatedWindows[0]+" "+calculatedWindows[1]);
+            
+            for (int k = 0; k < calculatedWindows.length; k++){
+                LOGGER.info("Calculated "+calculatedWindows[k]);
+            }
 
             assertTrue(Arrays.equals(windowValues[i], calculatedWindows));
         }
@@ -53,14 +58,16 @@ public class WindowAssignmentTest extends TestCase{
 
 
     public void testValidWindowAssignmentForAdvanceSmallerSize2(){
+        LOGGER.info("in function: testValidWindowAssignmentForAdvanceSmallerSize2");
+
         long windowSize = 20;
         long windowAdv = 10;
         long initTimestamp = 0;
 
         long[] validTimestamps = new long[] {0, 1, 10, 13, 19, 20, 27, 31};
         Long[][] windowValues = new Long[][]{
-                new Long[]{10L,null}, //0
-                new Long[]{10L,null}, //1
+                new Long[]{10L}, //0
+                new Long[]{10L}, //1
                 new Long[]{20L,10L}, //10
                 new Long[]{20L,10L},  //13
                 new Long[]{20L,10L},  //19
@@ -72,23 +79,27 @@ public class WindowAssignmentTest extends TestCase{
             Long[] calculatedWindows = Utils.calcWindows(windowSize,windowAdv,initTimestamp, validTimestamps[i]);
 
             LOGGER.info("Computing windows for timestamp [" + validTimestamps[i] + "]");
-            LOGGER.info("Calculated windows are: "+calculatedWindows[0]+" "+calculatedWindows[1]);
+            for (Long k:calculatedWindows){
+                LOGGER.info("Calculated "+k);
+            }
 
             assertTrue(Arrays.equals(windowValues[i], calculatedWindows));
         }
     }
 
     public void testValidWindowAssignmentForAdvanceSmallerSize3(){
+        LOGGER.info("in function: testValidWindowAssignmentForAdvanceSmallerSize3");
+
         long windowSize = 40;
         long windowAdv = 15;
         long initTimestamp = 0;
 
         long[] validTimestamps = new long[] {0, 1, 15, 29, 44, 50, 67, 81, 1920, 1080};
         Long[][] windowValues = new Long[][]{
-                new Long[]{15L,null,null}, //0
-                new Long[]{15L,null,null}, //1
-                new Long[]{30L,15L,null}, //15
-                new Long[]{30L,15L,null},  //29
+                new Long[]{15L}, //0
+                new Long[]{15L}, //1
+                new Long[]{30L,15L}, //15
+                new Long[]{30L,15L},  //29
                 new Long[]{45L,30L,15L},  //44
                 new Long[]{60L,45L,30L},  //50
                 new Long[]{75L,60L,45L},  //67
@@ -100,7 +111,9 @@ public class WindowAssignmentTest extends TestCase{
             Long[] calculatedWindows = Utils.calcWindows(windowSize,windowAdv,initTimestamp, validTimestamps[i]);
 
             LOGGER.info("Computing windows for timestamp [" + validTimestamps[i] + "]");
-            LOGGER.info("Calculated windows are: "+calculatedWindows[0]+" "+calculatedWindows[1]+" "+calculatedWindows[2]);
+            for (Long k:calculatedWindows){
+                LOGGER.info("Calculated "+k);
+            }
 
             assertTrue(Arrays.equals(windowValues[i], calculatedWindows));
         }
@@ -108,6 +121,9 @@ public class WindowAssignmentTest extends TestCase{
 
 
     public void testValidWindowAssignmentForSameSize(){
+        LOGGER.info("in function: testValidWindowAssignmentForSameSize");
+
+
         long windowSize = 50;
         long windowAdv = 50;
         long initTimestamp = 0;
@@ -126,7 +142,9 @@ public class WindowAssignmentTest extends TestCase{
             Long[] calculatedWindows = Utils.calcWindows(windowSize,windowAdv,initTimestamp, validTimestamps[i]);
 
             LOGGER.info("Computing windows for timestamp [" + validTimestamps[i] + "]");
-            LOGGER.info("Calculated windows are: "+calculatedWindows[0]);
+            for (Long k:calculatedWindows){
+                LOGGER.info("Calculated "+k);
+            }
 
             assertTrue(Arrays.equals(windowValues[i], calculatedWindows));
         }

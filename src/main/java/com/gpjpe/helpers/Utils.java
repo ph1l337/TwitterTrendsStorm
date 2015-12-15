@@ -5,6 +5,7 @@ import backtype.storm.tuple.Values;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -35,7 +36,7 @@ public final class Utils {
         return window;
     }
 
-    public static long[] calcWindows(long windowLengthSeconds, long windowAdvanceSeconds, long initTimestamp, long timestamp) {
+    public static Long[] calcWindows(long windowLengthSeconds, long windowAdvanceSeconds, long initTimestamp, long timestamp) {
 
         if (windowLengthSeconds < windowAdvanceSeconds) {
             throw new IllegalArgumentException(String.format("window length mustn't be smaller than window advance" +
@@ -53,21 +54,23 @@ public final class Utils {
                 windowLengthSeconds / windowAdvanceSeconds :
                 windowLengthSeconds / windowAdvanceSeconds + 1);
 
-        List<Long> windows = new ArrayList<>();
-
-       // long[] windows = new long[maxWindows];
+        ArrayList<Long> windowsList = new ArrayList<>();
 
 
         long nextWindowStart = (relTimestamp / windowAdvanceSeconds + 1) * windowAdvanceSeconds;
 
-        for (int i = maxWindows; i > 0; i--) {
+        for (int i = 0; i < maxWindows; i++) {
             if (!(nextWindowStart - i * windowAdvanceSeconds <= 0)) {
-                windows.add(i,nextWindowStart - i * windowAdvanceSeconds);
+                windowsList.add(nextWindowStart - i * windowAdvanceSeconds);
             }
         }
-
-        return windows;
+        return windowsList.toArray(new Long[windowsList.size()]);
     }
 
 
+    public static int calcMaxAmountofWindows(long windowLengthSeconds, long windowAdvanceSeconds){
+       return (int) ((windowLengthSeconds % windowAdvanceSeconds == 0) ?
+                windowLengthSeconds / windowAdvanceSeconds :
+                windowLengthSeconds / windowAdvanceSeconds + 1);
+    }
 }

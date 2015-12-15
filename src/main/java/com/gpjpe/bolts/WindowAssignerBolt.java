@@ -49,20 +49,18 @@ public class WindowAssignerBolt extends BaseRichBolt {
             return;
         }
 
-        long window = Utils.calcWindow(windowLengthSeconds, initTimestamp, timestamp);
+        Long[] windows = Utils.calcWindows(windowLengthSeconds,windowAdvanceSeconds, initTimestamp, timestamp);
         _collector.emit(new Values(
                 tuple.getValueByField("lang"),
                 tuple.getValueByField("hashtag"),
-                tuple.getValueByField("timestamp"),
-                tuple.getValueByField("initTimestamp"),
-                window));
+                windows));
 
-        LOGGER.debug("Window Assigned:" + window);
+        LOGGER.debug("Window Assigned:" + windows.toString());
 
     }
 
 
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(new Fields("lang", "hashtag", "timestamp", "initTimestamp", "window"));
+        outputFieldsDeclarer.declare(new Fields("lang", "hashtag", "windows"));
     }
 }

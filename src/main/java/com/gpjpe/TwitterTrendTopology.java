@@ -5,6 +5,7 @@ import backtype.storm.LocalCluster;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 import com.gpjpe.bolts.HashtagCountBolt;
+import com.gpjpe.bolts.NewWindowNotifierBolt;
 import com.gpjpe.bolts.WindowAssignerBolt;
 import com.gpjpe.spouts.KafkaTweetsSpout;
 import org.apache.log4j.Logger;
@@ -74,8 +75,9 @@ public class TwitterTrendTopology {
         String topic = appConfig.getProperty(CONFIG.KAFKA_TOPIC, "TweetStream");
 
         builder.setSpout("spout", new KafkaTweetsSpout(languagesToWatch, zookeeperURI, topic), 1);
-        builder.setBolt("windows", new WindowAssignerBolt(windowSizeSeconds),8).shuffleGrouping("spout");
-        builder.setBolt("counter", new HashtagCountBolt(storagePath)).fieldsGrouping("windows", new Fields("lang"));
+        builder.setBolt("windows", new WindowAssignerBolt(windowSizeSeconds, windowAdvanceSeconds),8).shuffleGrouping("spout");
+        builder.setBolt("newWindowNotifier", new NewWindowNotifierBolt(languagesToWatch),8).shuffleGrouping("windows");
+        builder.setBolt("counter", new HashtagCountBolt(storagePath)).fieldsGrouping("newWindowNotifier", new Fields("lang"));
 
         Config conf = new Config();
         conf.setDebug(true);
