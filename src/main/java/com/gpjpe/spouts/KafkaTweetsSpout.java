@@ -58,7 +58,7 @@ public class KafkaTweetsSpout extends BaseRichSpout {
             if (tweetString != null) {
                 String[] tuple = tweetString.split(",");
                 String tweetLanguage = tuple[0].trim();
-                Long timestamp = Long.parseLong(tuple[1].trim());
+                long timestamp = Long.parseLong(tuple[1].trim());
                 String hashTag = tuple[2].trim();
 
                 if(this.firstTweetTimestamp == UNSET){
