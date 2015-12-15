@@ -15,19 +15,25 @@ import java.util.Map;
 public class WindowAssignerBolt extends BaseRichBolt {
     private static final Logger LOGGER = Logger.getLogger(WindowAssignerBolt.class.getName());
     private static final long DEFAULT_WINDOW_LENGTH_S = 300;
+    private static final long DEFAULT_WINDOW_ADV_S = 100;
 
     private OutputCollector _collector;
     private final long windowLengthSeconds;
+    private final long windowAdvanceSeconds;
 
     public WindowAssignerBolt() {
-        this(DEFAULT_WINDOW_LENGTH_S);
+        this(DEFAULT_WINDOW_LENGTH_S, DEFAULT_WINDOW_ADV_S);
     }
 
-    public WindowAssignerBolt(long windowLengthSeconds) {
-        if (windowLengthSeconds <= 0){
+    public WindowAssignerBolt(long windowLengthSeconds, long windowAdvanceSeconds) {
+        if (windowLengthSeconds <= 0) {
             throw new IllegalArgumentException("0 and negative values not allowed.\n Received: " + windowLengthSeconds);
         }
+        if (windowAdvanceSeconds <= 0) {
+            throw new IllegalArgumentException("0 and negative values not allowed.\n Received: " + windowAdvanceSeconds);
+        }
         this.windowLengthSeconds = windowLengthSeconds;
+        this.windowAdvanceSeconds = windowAdvanceSeconds;
     }
 
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
@@ -57,6 +63,6 @@ public class WindowAssignerBolt extends BaseRichBolt {
 
 
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(new Fields("lang", "hashtag", "timestamp", "initTimestamp","window"));
+        outputFieldsDeclarer.declare(new Fields("lang", "hashtag", "timestamp", "initTimestamp", "window"));
     }
 }

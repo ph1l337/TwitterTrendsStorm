@@ -85,6 +85,7 @@ public class HashtagCountBolt extends BaseRichBolt {
 
                 writer = new BufferedWriter(new OutputStreamWriter(
                         new FileOutputStream(outputFolder + "/" + lang + ".log", true), "utf-8"));
+
                 if (hashtagObjectslist.isEmpty()) {
                     writer.write(currentWindow + "," + "Null" + "," + 0);
                     writer.write(currentWindow + "," + "Null" + "," + 0);
