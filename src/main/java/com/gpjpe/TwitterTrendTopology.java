@@ -5,7 +5,9 @@ import backtype.storm.LocalCluster;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 import com.gpjpe.bolts.HashtagCountBolt;
+import com.gpjpe.bolts.NewWindowNotifierBolt;
 import com.gpjpe.bolts.WindowAssignerBolt;
+import com.gpjpe.helpers.Utils;
 import com.gpjpe.spouts.KafkaTweetsSpout;
 import org.apache.log4j.Logger;
 
@@ -17,15 +19,15 @@ public class TwitterTrendTopology {
 
     private final static Logger LOGGER = Logger.getLogger(TwitterTrendTopology.class.getName());
 
-    public static void validateParameters(String[] params){
+    public static void validateParameters(String[] params) {
 
         if (params == null || params.length < 5) {
             throw new RuntimeException("Expected 5 arguments: " +
                     "langList zookeeperURI winParams topologyName dataFolder");
         }
 
-        List <String> messages = new ArrayList<>();
-        if (!params[1].contains(":")){
+        List<String> messages = new ArrayList<>();
+        if (!params[1].contains(":")) {
             messages.add(
                     String.format("Expected Zookeeper URI format is [IP:PORT], got %s", params[1]));
         }
@@ -35,8 +37,8 @@ public class TwitterTrendTopology {
                     String.format("Expected Window Configuration format is [Size,Slide], got %s", params[1]));
         }
 
-        if (!messages.isEmpty()){
-            for(String message: messages){
+        if (!messages.isEmpty()) {
+            for (String message : messages) {
                 LOGGER.error(message);
             }
             throw new IllegalArgumentException("Check parameters format");
@@ -59,23 +61,30 @@ public class TwitterTrendTopology {
         String topologyName = args[3];
         String storagePath = args[4];
 
-        long windowAdvanceSeconds = Long.parseLong(windowConfig[0]);
-        long windowSizeSeconds = Long.parseLong(windowConfig[1]);
+        long windowSizeSeconds = Long.parseLong(windowConfig[0]);
+        long windowAdvanceSeconds = Long.parseLong(windowConfig[1]);
 
-        if (windowSizeSeconds != windowAdvanceSeconds) {
-            throw new IllegalArgumentException("window size and advance must be the same. "
-                    + "received: \n window size:" + windowSizeSeconds
-                    + "\n window advance:" + windowAdvanceSeconds);
+        if (windowSizeSeconds < windowAdvanceSeconds) {
+            throw new IllegalArgumentException("Window size and advance greater than the advance. "
+                    + "\nWindow size:" + windowSizeSeconds
+                    + "\nWindow advance:" + windowAdvanceSeconds);
         }
 
         TopologyBuilder builder = new TopologyBuilder();
         AppConfig appConfig = new AppConfig();
         String topic = appConfig.getProperty(CONFIG.KAFKA_TOPIC, "TweetStream");
+        int maxWindows = Utils.calcMaxAmountofWindows(windowSizeSeconds, windowAdvanceSeconds);
+        String logSuffix = "05";
+
+        //TODO: DELETE FILES FOR EACH LANG BEFORE STARTING
 
         //TODO: set parallelism for more: threads == tasks
         builder.setSpout("spout", new KafkaTweetsSpout(languagesToWatch, zookeeperURI, topic), 1);
-        builder.setBolt("windows", new WindowAssignerBolt(windowSizeSeconds), 8).shuffleGrouping("spout");
-        builder.setBolt("counter", new HashtagCountBolt(storagePath), 1).fieldsGrouping("windows", new Fields("lang"));
+        builder.setBolt("windows", new WindowAssignerBolt(windowSizeSeconds, windowAdvanceSeconds), 8).shuffleGrouping("spout");
+        builder.setBolt("newWindowNotifier", new NewWindowNotifierBolt(languagesToWatch), 8).shuffleGrouping("windows");
+        builder.setBolt("counter", new HashtagCountBolt(3, maxWindows, storagePath, logSuffix))
+                .fieldsGrouping("newWindowNotifier", new Fields("lang"))
+                .setNumTasks(languagesToWatch.length);
 
         Config conf = new Config();
         conf.setNumWorkers(3);

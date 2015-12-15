@@ -8,7 +8,6 @@ import backtype.storm.tuple.Tuple;
 import com.gpjpe.domain.HashtagCount;
 import com.gpjpe.domain.HashtagCountComparator;
 import org.apache.log4j.Logger;
-import org.apache.log4j.varia.StringMatchFilter;
 
 import java.io.*;
 import java.util.*;
@@ -20,30 +19,27 @@ public class HashtagCountBolt extends BaseRichBolt {
     private static final int DEFAULT_TOP_HASH_TAG_COUNT = 3;
 
     private String outputFolder;
-    //    private Map<String, Long> hashtagCountMap = new HashMap<String, Long>();
     private Long[] currentWindows;
-    private Map<Long, Map<String, Long>> hashTagCountMap;
-    private String localLanguage;
+    private Map<String, Map<Long, Map<String, Long>>> languageWindowHashTagCountMap;
     private int maxWindows;
     private String logSuffix;
     private int numberOfTopHashTags;
+    private Set<String> languages;
 
     private OutputCollector _collector;
     private String _componentId;
 
-
-//    public HashtagCountBolt() {
-//        this(DEFAULT_OUTPUT_FOLDER, 1);
-//    }
+    //TODO: assume more than one language present
 
     public HashtagCountBolt(int numberOfTopHashTags, int maxWindows, String outputFolder, String logSuffix) {
         this.numberOfTopHashTags = numberOfTopHashTags;
         this.outputFolder = outputFolder;
         this.currentWindows = null;
-        this.hashTagCountMap = new HashMap<>();
+        this.languageWindowHashTagCountMap = new HashMap<>();
         this.maxWindows = maxWindows;
         this.currentWindows = new Long[maxWindows];
         this.logSuffix = logSuffix;
+        this.languages = new HashSet<>();
     }
 
 
@@ -52,94 +48,114 @@ public class HashtagCountBolt extends BaseRichBolt {
         this._componentId = topologyContext.getThisComponentId();
     }
 
-    private void updateHashTagCount(Long window, String hashTag) {
+    private void updateHashTagCount(String language, Long window, String hashTag) {
 
-        Map<String, Long> windowCountMap = this.hashTagCountMap.get(window);
+        //windows for a language
+        Map<Long, Map<String, Long>> windowHashTagCountMap = this.languageWindowHashTagCountMap.get(language);
 
-        if (windowCountMap == null) {
-            windowCountMap = new HashMap<>();
-            this.hashTagCountMap.put(window, windowCountMap);
+        if (windowHashTagCountMap == null) {
+            windowHashTagCountMap = new HashMap<>();
+            this.languageWindowHashTagCountMap.put(language, windowHashTagCountMap);
         }
 
-        Long hashTagCount = windowCountMap.get(hashTag);
+        Map<String, Long> hashTagCountMap = windowHashTagCountMap.get(window);
 
-        if (hashTagCount == null) {
-            windowCountMap.put(hashTag, 1L);
+        if (hashTagCountMap == null) {
+            hashTagCountMap = new HashMap<>();
+            windowHashTagCountMap.put(window, hashTagCountMap);
+
+        }
+
+        Long count = hashTagCountMap.get(hashTag);
+
+        if (count == null) {
+            hashTagCountMap.put(hashTag, 1L);
         } else {
-            windowCountMap.put(hashTag, hashTagCount + 1L);
+            hashTagCountMap.put(hashTag, count + 1L);
         }
     }
 
     private void writeWindowToFile(Long window) {
-
-        Map<String, Long> windowCountMap = this.hashTagCountMap.get(window);
+        //Is this empty?
 
         BufferedWriter writer = null;
+        List<HashtagCount> hashTagCountList = null;
 
-        List<HashtagCount> hashTagCountList = new ArrayList<>();
+        for (String language : this.languageWindowHashTagCountMap.keySet()) {
 
-        for (String hashTag : windowCountMap.keySet()) {
-            hashTagCountList.add(new HashtagCount(hashTag, windowCountMap.get(hashTag)));
-        }
+            Map<Long, Map<String, Long>> windowHashTagCountMap = this.languageWindowHashTagCountMap.get(language);
 
-        Collections.sort(hashTagCountList, new HashtagCountComparator());
-        Collections.reverse(hashTagCountList);
+            Map<String, Long> hashTagCountMap = windowHashTagCountMap.get(window);
 
-        try {
-
-            LOGGER.info(
-                    String.format("Writing window [%d] to file", window)
-            );
-
-            File dir = new File(outputFolder);
-            if (!dir.exists()) {
-                boolean result = dir.mkdir();
-                if (!result) {
-                    throw new RuntimeException(
-                            String.format("Couldn't create directory [%s] ", outputFolder)
-                    );
-                }
+            //language has no hashtags for this window
+            if (hashTagCountMap == null) {
+                continue;
             }
 
-            writer = new BufferedWriter(new OutputStreamWriter(
-                    new FileOutputStream(
-                            String.format("%s/%s_%s.log", outputFolder, localLanguage, logSuffix), true),
-                    "utf-8"));
+            hashTagCountList = new ArrayList<>();
 
-
-            for (int i = 0; i < numberOfTopHashTags; i++) {
-                if (i < hashTagCountList.size()) {
-                    writer.write(String.format(
-                            "%s,%s,%s,%d",
-                            window,
-                            localLanguage,
-                            hashTagCountList.get(i).getHashtag(),
-                            hashTagCountList.get(i).getCount()
-                    ));
-                } else {
-                    writer.write(String.format(
-                            "%s,%s,%s,%d",
-                            window,
-                            localLanguage,
-                            "null",
-                            0
-                    ));
-                }
+            for (String hashTag : hashTagCountMap.keySet()) {
+                hashTagCountList.add(new HashtagCount(hashTag, hashTagCountMap.get(hashTag)));
             }
 
-        } catch (IOException e) {
-            LOGGER.error(e);
-            throw new RuntimeException(e);
-        } finally {
+            Collections.sort(hashTagCountList, new HashtagCountComparator());
+            Collections.reverse(hashTagCountList);
+
             try {
-                if (writer != null) {
-                    writer.close();
+
+                LOGGER.info(
+                        String.format("Writing window [%d] to file", window)
+                );
+
+                File dir = new File(outputFolder);
+                if (!dir.exists()) {
+                    boolean result = dir.mkdir();
+                    if (!result) {
+                        throw new RuntimeException(
+                                String.format("Couldn't create directory [%s] ", outputFolder)
+                        );
+                    }
                 }
-            } catch (Exception e) {
+
+                writer = new BufferedWriter(new OutputStreamWriter(
+                        new FileOutputStream(
+                                String.format("%s/%s_%s.log", outputFolder, language, logSuffix), true),
+                        "utf-8"));
+
+                StringBuilder sb = new StringBuilder();
+
+                sb.append(window).append(",").append(language);
+
+                for (int i = 0; i < numberOfTopHashTags; i++) {
+                    if (i < hashTagCountList.size()) {
+                        sb.append(",")
+                                .append(hashTagCountList.get(i).getHashtag())
+                                .append(",")
+                                .append(hashTagCountList.get(i).getCount());
+                    } else {
+                        sb.append(",")
+                                .append("null")
+                                .append(",")
+                                .append(0L);
+                    }
+                }
+
+                writer.write(sb.toString());
+                writer.newLine();
+
+            } catch (IOException e) {
+                LOGGER.error(e);
                 throw new RuntimeException(e);
+            } finally {
+                try {
+                    if (writer != null) {
+                        writer.close();
+                    }
+                } catch (IOException e) {
+                    LOGGER.error(e);
+                }
             }
         }
-
     }
 
     public void execute(Tuple tuple) {
@@ -154,13 +170,16 @@ public class HashtagCountBolt extends BaseRichBolt {
         //if first value changed, flush old window (if size > 1)
         if (this.currentWindows[0] == null) {
             System.arraycopy(tupleWindows, 0, this.currentWindows, 0, tupleWindows.length);
-            this.localLanguage = tupleLanguage;
         }
 
-        if (!this.localLanguage.equals(tupleLanguage)) {
-            throw new RuntimeException(
+        if (!this.languages.contains(tupleLanguage)) {
+            this.languages.add(tupleLanguage);
+            LOGGER.info(
                     String.format(
-                            "Bolt [%s] has stopped because it received a different tuple language", _componentId
+                            "Bolt [%s] added language [%s]. Now running for languages: %s",
+                            _componentId,
+                            tupleLanguage,
+                            this.languages
                     )
             );
         }
@@ -168,13 +187,16 @@ public class HashtagCountBolt extends BaseRichBolt {
         if (!this.currentWindows[0].equals(tupleWindows[0])) {
 
             if (this.currentWindows[maxWindows - 1] != null) {
-                //TODO: flush old window
+                //flush old window
                 LOGGER.info("Window changed, flushing last window");
 
+                //map for this window does not exist?
                 this.writeWindowToFile(this.currentWindows[maxWindows - 1]);
 
-                //TODO: delete window from hashMap
-                this.hashTagCountMap.remove(this.currentWindows[maxWindows - 1]);
+                //delete window from hashMap
+                for (String language : this.languageWindowHashTagCountMap.keySet()) {
+                    this.languageWindowHashTagCountMap.get(language).remove(this.currentWindows[maxWindows - 1]);
+                }
             }
 
             //update current windows
@@ -182,11 +204,12 @@ public class HashtagCountBolt extends BaseRichBolt {
         }
 
         //update counts
+        if (tupleHashTag != null) {
+            for (Long window : tupleWindows) {
 
-        for (Long window : tupleWindows) {
-
-            //simply update counts
-            this.updateHashTagCount(window, tupleHashTag);
+                //simply update counts
+                this.updateHashTagCount(tupleLanguage, window, tupleHashTag);
+            }
         }
 
         //TODO: ack tuple?
