@@ -14,7 +14,6 @@ import org.apache.log4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class TwitterTrendTopology {
 
     private final static Logger LOGGER = Logger.getLogger(TwitterTrendTopology.class.getName());
