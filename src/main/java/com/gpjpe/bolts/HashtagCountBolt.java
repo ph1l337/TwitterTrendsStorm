@@ -36,11 +36,11 @@ public class HashtagCountBolt extends BaseRichBolt {
         this.numberOfTopHashTags = numberOfTopHashTags;
         this.outputFolder = outputFolder;
         this.currentWindows = null;
-        this.languageWindowHashTagCountMap = new HashMap<String, Map<Long, Map<String, Long>>>();
+        this.languageWindowHashTagCountMap = new HashMap<>();
         this.maxWindows = maxWindows;
         this.currentWindows = new Long[maxWindows];
         this.logSuffix = logSuffix;
-        this.languages = new HashSet<String>();
+        this.languages = new HashSet<>();
     }
 
 
@@ -55,14 +55,14 @@ public class HashtagCountBolt extends BaseRichBolt {
         Map<Long, Map<String, Long>> windowHashTagCountMap = this.languageWindowHashTagCountMap.get(language);
 
         if (windowHashTagCountMap == null) {
-            windowHashTagCountMap = new HashMap<Long, Map<String, Long>>();
+            windowHashTagCountMap = new HashMap<>();
             this.languageWindowHashTagCountMap.put(language, windowHashTagCountMap);
         }
 
         Map<String, Long> hashTagCountMap = windowHashTagCountMap.get(window);
 
         if (hashTagCountMap == null) {
-            hashTagCountMap = new HashMap<String, Long>();
+            hashTagCountMap = new HashMap<>();
             windowHashTagCountMap.put(window, hashTagCountMap);
         }
 
@@ -103,7 +103,7 @@ public class HashtagCountBolt extends BaseRichBolt {
                 }
 
             } else {
-                hashTagCountList = new ArrayList<HashtagCount>();
+                hashTagCountList = new ArrayList<>();
 
                 for (String hashTag : hashTagCountMap.keySet()) {
                     hashTagCountList.add(new HashtagCount(hashTag, hashTagCountMap.get(hashTag)));
@@ -135,8 +135,7 @@ public class HashtagCountBolt extends BaseRichBolt {
 
                 File dir = new File(outputFolder);
                 if (!dir.exists()) {
-                    boolean result = dir.mkdir();
-                    if (!result) {
+                    if (!dir.mkdirs()) {
                         throw new RuntimeException(
                                 String.format("Couldn't create directory [%s] ", outputFolder)
                         );
