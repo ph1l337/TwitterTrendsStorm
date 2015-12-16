@@ -5,9 +5,9 @@ import java.util.List;
 
 public enum TopologyDataSource {
     INTERNAL,
-    TWITTER;
+    KAFKA;
 
     public static List<String> modes() {
-        return Arrays.asList(INTERNAL.name(), TWITTER.name());
+        return Arrays.asList(INTERNAL.name(), KAFKA.name());
     }
 }

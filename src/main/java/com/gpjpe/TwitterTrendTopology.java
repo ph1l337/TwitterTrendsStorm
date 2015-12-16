@@ -50,7 +50,7 @@ public class TwitterTrendTopology {
 
         if(!TopologyDataSource.modes().contains(params[7].toUpperCase())){
             messages.add(
-                    String.format("Source should be either `internal` or `twitter`: %s", params[7])
+                    String.format("Source should be either `internal` or `kafka`: %s", params[7])
             );
         }
 
