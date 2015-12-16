@@ -106,10 +106,6 @@ public class TwitterTrendTopology {
 
         //TODO: DELETE FILES FOR EACH LANG BEFORE STARTING?
 
-        //TODO: set parallelism for more: threads == tasks
-//        builder.setSpout("spout", new KafkaTweetsSpout(languagesToWatch, zookeeperURI, topic), 1);
-        //TODO: use real tweet spout
-        builder.setSpout("spout", new FakeTweetsSpout(languagesToWatch), 1);
         builder.setBolt("windows", new WindowAssignerBolt(windowSizeSeconds, windowAdvanceSeconds), 1).shuffleGrouping("spout");
         builder.setBolt("newWindowNotifier", new NewWindowNotifierBolt(languagesToWatch), 1).shuffleGrouping("windows");
         builder.setBolt("counter", new HashtagCountBolt(3, maxWindows, storagePath, logSuffix), languagesToWatch.length)
@@ -120,6 +116,7 @@ public class TwitterTrendTopology {
         conf.setNumWorkers(4);
 
         if (mode.compareTo(TOPOLOGY_RUN_MODE.LOCAL.name()) == 0){
+            builder.setSpout("spout", new FakeTweetsSpout(languagesToWatch), 1);
             conf.setDebug(true);
             LocalCluster cluster = new LocalCluster();
             cluster.submitTopology(topologyName, conf, builder.createTopology());
@@ -133,6 +130,7 @@ public class TwitterTrendTopology {
             cluster.shutdown();
         }else {
             //TODO: remote for submission
+            builder.setSpout("spout", new KafkaTweetsSpout(languagesToWatch, zookeeperURI, topic), 1);
             conf.setDebug(true);
             StormSubmitter.submitTopology(topologyName, conf, builder.createTopology());
         }

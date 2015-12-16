@@ -2,8 +2,6 @@ package com.gpjpe.helpers;
 
 import backtype.storm.tuple.Values;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -16,7 +14,7 @@ public final class Utils {
         Random random = new Random();
 
         return new Values(langs[random.nextInt(langs.length)], hashTags[random.nextInt(hashTags.length)],
-                LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond());
+                System.currentTimeMillis() / 1000L);
     }
 
     //todo enusre initTimestamp > timestamp
