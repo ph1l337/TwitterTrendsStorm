@@ -13,10 +13,9 @@ import com.gpjpe.bolts.WindowAssignerBolt;
 import com.gpjpe.helpers.Utils;
 import com.gpjpe.spouts.FakeTweetsSpout;
 import com.gpjpe.spouts.KafkaTweetsSpout;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import storm.trident.TridentState;
-import storm.trident.TridentTopology;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,24 +23,14 @@ import java.util.List;
 
 public class TwitterTrendTopology {
 
-    public enum TOPOLOGY_RUN_MODE{
-
-        LOCAL,
-        REMOTE;
-
-        public static List<String> modes(){
-            return Arrays.asList(LOCAL.name(), REMOTE.name());
-        }
-    }
-
     private final static Logger LOGGER = LoggerFactory.getLogger(TwitterTrendTopology.class.getName());
 
     public static void validateParameters(String[] params) {
 
         //TODO: update
-        if (params == null || params.length < 7) {
-            throw new RuntimeException("Expected 7 arguments: " +
-                    "langList zookeeperURI winParams topologyName dataFolder logSuffix mode");
+        if (params == null || params.length < 9) {
+            throw new RuntimeException("Expected 8 arguments: " +
+                    "langList zookeeperURI winParams topologyName dataFolder logSuffix mode source debug");
         }
 
         List<String> messages = new ArrayList<String>();
@@ -52,12 +41,24 @@ public class TwitterTrendTopology {
 
         if (!params[2].contains(",")) {
             messages.add(
-                    String.format("Expected Window Configuration format is [Size,Slide], got %s", params[1]));
+                    String.format("Expected Window Configuration format is [Size,Slide], got %s", params[2]));
         }
 
         if(!TOPOLOGY_RUN_MODE.modes().contains(params[6].toUpperCase())){
             messages.add(
                     String.format("Mode should be either `local` or `remote`: %s", params[6])
+            );
+        }
+
+        if(!TOPOLOGY_DATA_SOURCE.modes().contains(params[7].toUpperCase())){
+            messages.add(
+                    String.format("Source should be either `internal` or `twitter`: %s", params[7])
+            );
+        }
+
+        if (!Arrays.asList(new String[]{"true", "false"}).contains(params[8].toLowerCase())){
+            messages.add(
+                    String.format("Debug should be either `true` or `false`: %s", params[8])
             );
         }
 
@@ -75,6 +76,8 @@ public class TwitterTrendTopology {
         LOGGER.info(String.format("DataFolder: %s", params[4]));
         LOGGER.info(String.format("LogSuffix: %s", params[5]));
         LOGGER.info(String.format("Mode: %s", params[6]));
+        LOGGER.info(String.format("Source: %s", params[7]));
+        LOGGER.info(String.format("Debug: %s", params[8]));
     }
 
     public static void main(String[] args) throws AlreadyAliveException, InvalidTopologyException {
@@ -87,7 +90,9 @@ public class TwitterTrendTopology {
         String topologyName = args[3];
         String storagePath = args[4];
         String logSuffix = args[5];
-        String mode = args[6].toUpperCase();
+        TOPOLOGY_RUN_MODE mode = TOPOLOGY_RUN_MODE.valueOf(args[6].toUpperCase());
+        TOPOLOGY_DATA_SOURCE source = TOPOLOGY_DATA_SOURCE.valueOf(args[7].toUpperCase());
+        boolean debug = Boolean.valueOf(args[8].toUpperCase());
 
         long windowSizeSeconds = Long.parseLong(windowConfig[0]);
         long windowAdvanceSeconds = Long.parseLong(windowConfig[1]);
@@ -105,6 +110,11 @@ public class TwitterTrendTopology {
 
 
         //TODO: DELETE FILES FOR EACH LANG BEFORE STARTING?
+        if (source == TOPOLOGY_DATA_SOURCE.INTERNAL) {
+            builder.setSpout("spout", new FakeTweetsSpout(languagesToWatch), 1);
+        }else {
+            builder.setSpout("spout", new KafkaTweetsSpout(languagesToWatch, zookeeperURI, topic), 1);
+        }
 
         builder.setBolt("windows", new WindowAssignerBolt(windowSizeSeconds, windowAdvanceSeconds), 1).shuffleGrouping("spout");
         builder.setBolt("newWindowNotifier", new NewWindowNotifierBolt(languagesToWatch), 1).shuffleGrouping("windows");
@@ -114,10 +124,9 @@ public class TwitterTrendTopology {
 
         Config conf = new Config();
         conf.setNumWorkers(4);
+        conf.setDebug(debug);
 
-        if (mode.compareTo(TOPOLOGY_RUN_MODE.LOCAL.name()) == 0){
-            builder.setSpout("spout", new FakeTweetsSpout(languagesToWatch), 1);
-            conf.setDebug(true);
+        if (mode == TOPOLOGY_RUN_MODE.LOCAL){
             LocalCluster cluster = new LocalCluster();
             cluster.submitTopology(topologyName, conf, builder.createTopology());
 
@@ -129,9 +138,6 @@ public class TwitterTrendTopology {
 
             cluster.shutdown();
         }else {
-            //TODO: remote for submission
-            builder.setSpout("spout", new KafkaTweetsSpout(languagesToWatch, zookeeperURI, topic), 1);
-            conf.setDebug(true);
             StormSubmitter.submitTopology(topologyName, conf, builder.createTopology());
         }
     }

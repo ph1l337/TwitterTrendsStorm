@@ -1,13 +1,14 @@
 package com.gpjpe.domain;
 
 import junit.framework.TestCase;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Comparator;
 
 
 public class HashtagCountComparatorTest extends TestCase {
-    private final static Logger LOGGER = Logger.getLogger(HashtagCountComparatorTest.class.getName());
+    private final static Logger LOGGER = LoggerFactory.getLogger(HashtagCountComparatorTest.class.getName());
     Comparator comparator = new HashtagCountComparator();
     HashtagCount a = new HashtagCount("a",10L);
     HashtagCount aa = new HashtagCount("a",10L);

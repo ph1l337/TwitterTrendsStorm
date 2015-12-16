@@ -1,13 +1,15 @@
 package com.gpjpe.helpers;
 
 import junit.framework.TestCase;
-import org.apache.log4j.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 
 public class WindowAssignmentTest extends TestCase{
 
-    private final static Logger LOGGER = Logger.getLogger(WindowAssignmentTest.class.getName());
+    private final static Logger LOGGER = LoggerFactory.getLogger(WindowAssignmentTest.class.getName());
 
     public void testValidWindowAssignmentForWindowEqualsAdvance(){
         LOGGER.info("in function: testValidWindowAssignmentForWindowEqualsAdvance");
@@ -47,9 +49,9 @@ public class WindowAssignmentTest extends TestCase{
             Long[] calculatedWindows = Utils.calcWindows(windowSize,windowAdv,initTimestamp, validTimestamps[i]);
 
             LOGGER.info("Computing windows for timestamp [" + validTimestamps[i] + "]");
-            
-            for (int k = 0; k < calculatedWindows.length; k++){
-                LOGGER.info("Calculated "+calculatedWindows[k]);
+
+            for (Long calculatedWindow : calculatedWindows) {
+                LOGGER.info("Calculated " + calculatedWindow);
             }
 
             assertTrue(Arrays.equals(windowValues[i], calculatedWindows));
