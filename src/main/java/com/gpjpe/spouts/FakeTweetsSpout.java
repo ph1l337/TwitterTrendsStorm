@@ -6,19 +6,20 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichSpout;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
-import com.gpjpe.domain.reader.KafkaStreamReader;
-import com.gpjpe.helpers.Utils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.gpjpe.helpers.Utils;
+
 
 public class FakeTweetsSpout extends BaseRichSpout {
 
-    private final static Logger LOGGER = Logger.getLogger(FakeTweetsSpout.class.getName());
+    private final static Logger LOGGER = LoggerFactory.getLogger(FakeTweetsSpout.class.getName());
 
     private SpoutOutputCollector _collector;
     private Set<String> languagesToWatch;
@@ -49,11 +50,11 @@ public class FakeTweetsSpout extends BaseRichSpout {
 
             Values tweet = Utils.tweet();
 
-            if(this.firstTweetTimestamp == UNSET){
-                this.firstTweetTimestamp = (Long)tweet.get(2);
+            if (this.firstTweetTimestamp == UNSET) {
+                this.firstTweetTimestamp = (Long) tweet.get(2);
             }
 
-            if (this.languagesToWatch.contains((String)tweet.get(0))){
+            if (this.languagesToWatch.contains((String) tweet.get(0))) {
                 this._collector.emit(
                         new Values(
                                 tweet.get(0),
@@ -66,7 +67,7 @@ public class FakeTweetsSpout extends BaseRichSpout {
 
         } catch (Exception e) {
             _collector.reportError(e);
-            LOGGER.error(e);
+            LOGGER.error(e.toString());
         }
     }
 }

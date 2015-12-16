@@ -5,8 +5,6 @@ import backtype.storm.tuple.Values;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Random;
 
 public final class Utils {
@@ -54,7 +52,7 @@ public final class Utils {
                 windowLengthSeconds / windowAdvanceSeconds :
                 windowLengthSeconds / windowAdvanceSeconds + 1);
 
-        ArrayList<Long> windowsList = new ArrayList<>();
+        ArrayList<Long> windowsList = new ArrayList<Long>();
 
 
         long nextWindowStart = (relTimestamp / windowAdvanceSeconds + 1) * windowAdvanceSeconds;
@@ -67,11 +65,11 @@ public final class Utils {
         return windowsList.toArray(new Long[windowsList.size()]);
     }
 
-    public static String Stringify(Object[] list, String seperator){
+    public static String Stringify(Object[] list, String seperator) {
 
         StringBuilder sb = new StringBuilder();
 
-        for(int i = 0; i < list.length; i++){
+        for (int i = 0; i < list.length; i++) {
             sb.append(list[i].toString());
             if (i < list.length - 1) {
                 sb.append(seperator);
@@ -82,8 +80,8 @@ public final class Utils {
     }
 
 
-    public static int calcMaxAmountofWindows(long windowLengthSeconds, long windowAdvanceSeconds){
-       return (int) ((windowLengthSeconds % windowAdvanceSeconds == 0) ?
+    public static int calcMaxAmountofWindows(long windowLengthSeconds, long windowAdvanceSeconds) {
+        return (int) ((windowLengthSeconds % windowAdvanceSeconds == 0) ?
                 windowLengthSeconds / windowAdvanceSeconds :
                 windowLengthSeconds / windowAdvanceSeconds + 1);
     }

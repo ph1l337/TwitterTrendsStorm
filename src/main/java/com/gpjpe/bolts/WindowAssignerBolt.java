@@ -7,13 +7,15 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
-import com.gpjpe.helpers.Utils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
+import com.gpjpe.helpers.Utils;
+
 public class WindowAssignerBolt extends BaseRichBolt {
-    private static final Logger LOGGER = Logger.getLogger(WindowAssignerBolt.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(WindowAssignerBolt.class.getName());
     private static final long DEFAULT_WINDOW_LENGTH_S = 300;
     private static final long DEFAULT_WINDOW_ADV_S = 100;
 
@@ -49,7 +51,7 @@ public class WindowAssignerBolt extends BaseRichBolt {
             try {
                 Thread.sleep(1);
             }catch (InterruptedException e){
-                LOGGER.error(e);
+                LOGGER.error(e.toString());
             }
             return;
         }

@@ -5,7 +5,8 @@ import kafka.consumer.ConsumerConfig;
 import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
 import kafka.javaapi.consumer.ConsumerConnector;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -16,7 +17,7 @@ import java.util.concurrent.*;
 
 public class KafkaStreamReader implements IStreamReader {
 
-    private final static Logger LOGGER = Logger.getLogger(KafkaStreamReader.class.getName());
+    private final static Logger LOGGER = LoggerFactory.getLogger(KafkaStreamReader.class.getName());
 
     private ConsumerConnector consumer;
     private ExecutorService executor;
@@ -38,7 +39,7 @@ public class KafkaStreamReader implements IStreamReader {
         ConsumerConfig consumerConfig = new ConsumerConfig(properties);
 
         int queueSize = 1000;
-        this.queue = new ArrayBlockingQueue<>(queueSize, true);
+        this.queue = new ArrayBlockingQueue<String>(queueSize, true);
         this.topic = topic;
         this.consumer = Consumer.createJavaConsumerConnector(consumerConfig);
 
@@ -87,7 +88,7 @@ public class KafkaStreamReader implements IStreamReader {
         try {
             message = queue.take();
         } catch (InterruptedException e) {
-            LOGGER.error(e);
+            LOGGER.error(e.toString());
         }
 
         return message;
@@ -113,7 +114,7 @@ public class KafkaStreamReader implements IStreamReader {
                 try {
                     queue.put(message);
                 } catch (InterruptedException e) {
-                    LOGGER.error(e);
+                    LOGGER.error(e.toString());
                 }
                 LOGGER.debug("Thread " + threadNumber + ": " + message);
             }

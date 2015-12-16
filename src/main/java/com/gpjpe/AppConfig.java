@@ -1,6 +1,7 @@
 package com.gpjpe;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -10,7 +11,7 @@ import java.util.Properties;
 public class AppConfig {
 
     private final static String CONFIG_FILE = "config.properties";
-    private final static Logger LOGGER = Logger.getLogger(AppConfig.class.getName());
+    private final static Logger LOGGER = LoggerFactory.getLogger(AppConfig.class.getName());
 
     Properties properties;
 
@@ -28,12 +29,12 @@ public class AppConfig {
                 throw new FileNotFoundException("Property file '" + CONFIG_FILE + "' not found in the classpath");
             }
         } catch (IOException e) {
-            LOGGER.error(e);
+            LOGGER.error(e.toString());
             throw new RuntimeException(e);
         }
     }
 
-    public String getProperty(CONFIG key, String defaultValue){
+    public String getProperty(CONFIG key, String defaultValue) {
         return this.properties.getProperty(key.getName(), defaultValue);
     }
 }

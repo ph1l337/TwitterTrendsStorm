@@ -7,14 +7,15 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
 import com.gpjpe.domain.HashtagCount;
 import com.gpjpe.domain.HashtagCountComparator;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
 
 public class HashtagCountBolt extends BaseRichBolt {
 
-    private static final Logger LOGGER = Logger.getLogger(HashtagCountBolt.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(HashtagCountBolt.class.getName());
     private static final String DEFAULT_OUTPUT_FOLDER = "output";
     private static final int DEFAULT_TOP_HASH_TAG_COUNT = 3;
 
@@ -151,7 +152,7 @@ public class HashtagCountBolt extends BaseRichBolt {
                 writer.newLine();
 
             } catch (IOException e) {
-                LOGGER.error(e);
+                LOGGER.error(e.toString());
                 throw new RuntimeException(e);
             } finally {
                 try {
@@ -159,7 +160,7 @@ public class HashtagCountBolt extends BaseRichBolt {
                         writer.close();
                     }
                 } catch (IOException e) {
-                    LOGGER.error(e);
+                    LOGGER.error(e.toString());
                 }
             }
         }
@@ -193,7 +194,7 @@ public class HashtagCountBolt extends BaseRichBolt {
             System.arraycopy(tupleWindows, 0, this.currentWindows, 0, tupleWindows.length);
         }
 
-        if (!this.currentWindows[0].equals(tupleWindows[0])) {
+        if (this.currentWindows[0].compareTo(tupleWindows[0]) != 0) {
 
             if (this.currentWindows[maxWindows - 1] != null) {
                 //flush old window

@@ -1,6 +1,5 @@
 package com.gpjpe.bolts;
 
-
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
@@ -12,10 +11,11 @@ import backtype.storm.tuple.Values;
 import java.util.Map;
 
 import com.gpjpe.helpers.Utils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class NewWindowNotifierBolt extends BaseRichBolt {
-    private static final Logger LOGGER = Logger.getLogger(NewWindowNotifierBolt.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(NewWindowNotifierBolt.class.getName());
     private OutputCollector _collector;
     String[] langs;
     private Long mostRecentWindow = null;
@@ -34,7 +34,7 @@ public class NewWindowNotifierBolt extends BaseRichBolt {
     public void execute(Tuple tuple) {
 
         String tupleLanguage = (String) tuple.getValueByField("lang");
-        String tutpleHashTag = (String) tuple.getValueByField("hashtag");
+        String tupleHashTag = (String) tuple.getValueByField("hashtag");
         Long[] windows = (Long[]) (tuple.getValueByField("windows"));
 
         Long tupleTopWindow = windows[0];
@@ -42,7 +42,7 @@ public class NewWindowNotifierBolt extends BaseRichBolt {
         //always pass on the tuple received.
         _collector.emit(new Values(
                         tupleLanguage,
-                        tutpleHashTag,
+                        tupleHashTag,
                         windows)
         );
 
@@ -50,7 +50,7 @@ public class NewWindowNotifierBolt extends BaseRichBolt {
                 String.format(
                         "Sent tuple: {%s, %s, %s}",
                         tupleLanguage,
-                        tutpleHashTag,
+                        tupleHashTag,
                         Utils.Stringify(windows, ",")
                 )
         );
@@ -60,11 +60,11 @@ public class NewWindowNotifierBolt extends BaseRichBolt {
             mostRecentWindow = tupleTopWindow;
         }
 
-        //if a with a new most recent window arrives sent out tuples with hashtag=null to every language in question
+        //if a with a nuw most recent window arrives sent out tuples with hashtag=null to every language in question
 
-        if (!mostRecentWindow.equals(tupleTopWindow)) {
+        if (mostRecentWindow.compareTo(tupleTopWindow) != 0) {
             for (String lang : langs) {
-                if (!lang.equals(tupleLanguage)) {
+                if (lang.compareTo(tupleLanguage) != 0) {
                     _collector.emit(new Values(
                             lang,
                             null,
