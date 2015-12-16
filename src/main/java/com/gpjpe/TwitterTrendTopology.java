@@ -15,9 +15,11 @@ import com.gpjpe.spouts.KafkaTweetsSpout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 
 public class TwitterTrendTopology {
 
@@ -25,7 +27,6 @@ public class TwitterTrendTopology {
 
     public static void validateParameters(String[] params) {
 
-        //TODO: update
         if (params == null || params.length < 9) {
             throw new RuntimeException("Expected 8 arguments: " +
                     "langList zookeeperURI winParams topologyName dataFolder logSuffix mode source debug");
@@ -78,6 +79,24 @@ public class TwitterTrendTopology {
         LOGGER.info(String.format("Debug: %s", params[8]));
     }
 
+    public static void clearFiles(String[] languages, String outputDir){
+
+        File file;
+
+        for(String language: languages){
+            file = new File(String.format("%s/%s", outputDir, language));
+
+            if (file.exists()){
+
+                LOGGER.info(
+                        String.format(
+                                "Deleting file %s: %s", file.getPath(), file.delete()
+                        )
+                );
+            }
+        }
+    }
+
     public static void main(String[] args) throws AlreadyAliveException, InvalidTopologyException {
 
         validateParameters(args);
@@ -100,6 +119,8 @@ public class TwitterTrendTopology {
                     + "\nWindow size:" + windowSizeSeconds
                     + "\nWindow advance:" + windowAdvanceSeconds);
         }
+
+        clearFiles(languagesToWatch, storagePath);
 
         TopologyBuilder builder = new TopologyBuilder();
         AppConfig appConfig = new AppConfig();
