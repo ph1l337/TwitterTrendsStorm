@@ -208,7 +208,7 @@ public class HashtagCountBolt extends BaseRichBolt {
                 //delete window from hashMap
                 for (String language : this.languageWindowHashTagCountMap.keySet()) {
                     LOGGER.info(
-                            String.format("Removing window [%s] for window [%s]",
+                            String.format("Removing window [%s] for language [%s]",
                                     this.currentWindows[maxWindows - 1],
                                     language)
                     );

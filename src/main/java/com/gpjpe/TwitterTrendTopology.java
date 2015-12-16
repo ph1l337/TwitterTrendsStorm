@@ -72,14 +72,6 @@ public class TwitterTrendTopology {
                     + "\nWindow advance:" + windowAdvanceSeconds);
         }
 
-//        TridentTopology topology = new TridentTopology();
-//        TridentState superState =
-//                topology.newStream("spout", new FakeTweetsSpout(languagesToWatch))
-//                        .groupBy(new Fields("word"))
-//                        .
-//                        .persistentAggregate(new MemoryMapState.Factory(), new Count(), new Fields("count"))
-//                        .parallelismHint(6);
-
         TopologyBuilder builder = new TopologyBuilder();
         AppConfig appConfig = new AppConfig();
         String topic = appConfig.getProperty(CONFIG.KAFKA_TOPIC, "TweetStream");
