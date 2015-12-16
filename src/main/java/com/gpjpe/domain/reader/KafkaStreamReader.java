@@ -12,7 +12,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executors;
 
 
 public class KafkaStreamReader implements IStreamReader {
@@ -42,14 +46,6 @@ public class KafkaStreamReader implements IStreamReader {
         this.queue = new ArrayBlockingQueue<String>(queueSize, true);
         this.topic = topic;
         this.consumer = Consumer.createJavaConsumerConnector(consumerConfig);
-
-//        Map<String, Integer> topicCountMap = new HashMap<>();
-//        topicCountMap.put(topic, 1);
-//        Map<String, List<KafkaStream<byte[], byte[]>>> consumerMap =
-//                consumerConnector.createMessageStreams(topicCountMap);
-//
-//        List<KafkaStream<byte[], byte[]>> streams = consumerMap.get(topic);
-//        this.iterator = streams.get(0).iterator();
     }
 
     public void shutdown() {

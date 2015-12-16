@@ -17,7 +17,6 @@ public final class Utils {
                 System.currentTimeMillis() / 1000L);
     }
 
-    //todo enusre initTimestamp > timestamp
     public static long calcWindow(long windowLength_s, long initTimestamp, long timestamp) {
 
         long window;
