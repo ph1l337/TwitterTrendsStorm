@@ -70,7 +70,7 @@ public class KafkaTweetsSpout extends BaseRichSpout {
                 if (this.languagesToWatch.contains(tweetLanguage)) {
                     this._collector.emit(new Values(tweetLanguage, hashTag, timestamp, this.firstTweetTimestamp));
                 } else {
-                    LOGGER.info("Tweet is not of interest");
+                    LOGGER.debug("Tweet is not of interest");
                 }
             } else {
                 //no work, put CPU to sleep for a spell
