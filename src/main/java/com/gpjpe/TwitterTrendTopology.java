@@ -1,6 +1,5 @@
 package com.gpjpe;
 
-import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.generated.AlreadyAliveException;
@@ -13,7 +12,6 @@ import com.gpjpe.bolts.WindowAssignerBolt;
 import com.gpjpe.helpers.Utils;
 import com.gpjpe.spouts.FakeTweetsSpout;
 import com.gpjpe.spouts.KafkaTweetsSpout;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,13 +42,13 @@ public class TwitterTrendTopology {
                     String.format("Expected Window Configuration format is [Size,Slide], got %s", params[2]));
         }
 
-        if(!TOPOLOGY_RUN_MODE.modes().contains(params[6].toUpperCase())){
+        if(!TopologyRunMode.modes().contains(params[6].toUpperCase())){
             messages.add(
                     String.format("Mode should be either `local` or `remote`: %s", params[6])
             );
         }
 
-        if(!TOPOLOGY_DATA_SOURCE.modes().contains(params[7].toUpperCase())){
+        if(!TopologyDataSource.modes().contains(params[7].toUpperCase())){
             messages.add(
                     String.format("Source should be either `internal` or `twitter`: %s", params[7])
             );
@@ -90,8 +88,8 @@ public class TwitterTrendTopology {
         String topologyName = args[3];
         String storagePath = args[4];
         String logSuffix = args[5];
-        TOPOLOGY_RUN_MODE mode = TOPOLOGY_RUN_MODE.valueOf(args[6].toUpperCase());
-        TOPOLOGY_DATA_SOURCE source = TOPOLOGY_DATA_SOURCE.valueOf(args[7].toUpperCase());
+        TopologyRunMode mode = TopologyRunMode.valueOf(args[6].toUpperCase());
+        TopologyDataSource source = TopologyDataSource.valueOf(args[7].toUpperCase());
         boolean debug = Boolean.valueOf(args[8].toUpperCase());
 
         long windowSizeSeconds = Long.parseLong(windowConfig[0]);
@@ -105,12 +103,12 @@ public class TwitterTrendTopology {
 
         TopologyBuilder builder = new TopologyBuilder();
         AppConfig appConfig = new AppConfig();
-        String topic = appConfig.getProperty(CONFIG.KAFKA_TOPIC, "TweetStream");
+        String topic = appConfig.getProperty(ConfigParams.KAFKA_TOPIC, "TweetStream");
         int maxWindows = Utils.calcMaxAmountofWindows(windowSizeSeconds, windowAdvanceSeconds);
 
 
         //TODO: DELETE FILES FOR EACH LANG BEFORE STARTING?
-        if (source == TOPOLOGY_DATA_SOURCE.INTERNAL) {
+        if (source == TopologyDataSource.INTERNAL) {
             builder.setSpout("spout", new FakeTweetsSpout(languagesToWatch), 1);
         }else {
             builder.setSpout("spout", new KafkaTweetsSpout(languagesToWatch, zookeeperURI, topic), 1);
@@ -122,11 +120,11 @@ public class TwitterTrendTopology {
                 .fieldsGrouping("newWindowNotifier", new Fields("lang"))
                 .setNumTasks(languagesToWatch.length);
 
-        Config conf = new Config();
+        backtype.storm.Config conf = new backtype.storm.Config();
         conf.setNumWorkers(4);
         conf.setDebug(debug);
 
-        if (mode == TOPOLOGY_RUN_MODE.LOCAL){
+        if (mode == TopologyRunMode.LOCAL){
             LocalCluster cluster = new LocalCluster();
             cluster.submitTopology(topologyName, conf, builder.createTopology());
 

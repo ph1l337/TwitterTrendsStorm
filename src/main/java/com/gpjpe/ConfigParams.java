@@ -1,11 +1,11 @@
 package com.gpjpe;
 
-public enum CONFIG {
+public enum ConfigParams {
     KAFKA_TOPIC("KafkaTopic");
 
     private String name;
 
-    private CONFIG(String name){
+    private ConfigParams(String name){
         this.name = name;
     }
 

@@ -34,7 +34,7 @@ public class AppConfig {
         }
     }
 
-    public String getProperty(CONFIG key, String defaultValue) {
+    public String getProperty(ConfigParams key, String defaultValue) {
         return this.properties.getProperty(key.getName(), defaultValue);
     }
 }

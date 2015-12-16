@@ -61,6 +61,7 @@ public class WindowAssignerBolt extends BaseRichBolt {
                 tuple.getValueByField("lang"),
                 tuple.getValueByField("hashtag"),
                 windows));
+        this._collector.ack(tuple);
     }
 
 

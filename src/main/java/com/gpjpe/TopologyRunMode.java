@@ -3,7 +3,7 @@ package com.gpjpe;
 import java.util.Arrays;
 import java.util.List;
 
-public enum TOPOLOGY_RUN_MODE {
+public enum TopologyRunMode {
     LOCAL,
     REMOTE;
 

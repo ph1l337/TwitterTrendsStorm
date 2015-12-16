@@ -46,6 +46,8 @@ public class NewWindowNotifierBolt extends BaseRichBolt {
                         windows)
         );
 
+        this._collector.ack(tuple);
+
         LOGGER.debug(
                 String.format(
                         "Sent tuple: {%s, %s, %s}",
