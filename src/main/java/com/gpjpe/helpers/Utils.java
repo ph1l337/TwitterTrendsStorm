@@ -11,14 +11,14 @@ import java.util.Random;
 
 public final class Utils {
 
-    public static Values tweet(long initTimestamp) {
+    public static Values tweet() {
 
         final String[] hashTags = new String[]{"SemperFi", "PewDiePie", "House", "Benzino"};
         final String[] langs = new String[]{"en", "es", "it", "pt"};
         Random random = new Random();
 
         return new Values(langs[random.nextInt(langs.length)], hashTags[random.nextInt(hashTags.length)],
-                LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond(), initTimestamp);
+                LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond());
     }
 
     //todo enusre initTimestamp > timestamp

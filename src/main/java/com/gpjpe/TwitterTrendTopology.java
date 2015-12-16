@@ -8,8 +8,11 @@ import com.gpjpe.bolts.HashtagCountBolt;
 import com.gpjpe.bolts.NewWindowNotifierBolt;
 import com.gpjpe.bolts.WindowAssignerBolt;
 import com.gpjpe.helpers.Utils;
+import com.gpjpe.spouts.FakeTweetsSpout;
 import com.gpjpe.spouts.KafkaTweetsSpout;
 import org.apache.log4j.Logger;
+import storm.trident.TridentState;
+import storm.trident.TridentTopology;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +28,7 @@ public class TwitterTrendTopology {
                     "langList zookeeperURI winParams topologyName dataFolder");
         }
 
-        List<String> messages = new ArrayList<>();
+        List<String> messages = new ArrayList<String>();
         if (!params[1].contains(":")) {
             messages.add(
                     String.format("Expected Zookeeper URI format is [IP:PORT], got %s", params[1]));
@@ -69,24 +72,33 @@ public class TwitterTrendTopology {
                     + "\nWindow advance:" + windowAdvanceSeconds);
         }
 
+//        TridentTopology topology = new TridentTopology();
+//        TridentState superState =
+//                topology.newStream("spout", new FakeTweetsSpout(languagesToWatch))
+//                        .groupBy(new Fields("word"))
+//                        .
+//                        .persistentAggregate(new MemoryMapState.Factory(), new Count(), new Fields("count"))
+//                        .parallelismHint(6);
+
         TopologyBuilder builder = new TopologyBuilder();
         AppConfig appConfig = new AppConfig();
         String topic = appConfig.getProperty(CONFIG.KAFKA_TOPIC, "TweetStream");
         int maxWindows = Utils.calcMaxAmountofWindows(windowSizeSeconds, windowAdvanceSeconds);
         String logSuffix = "05";
 
-        //TODO: DELETE FILES FOR EACH LANG BEFORE STARTING
+        //TODO: DELETE FILES FOR EACH LANG BEFORE STARTING?
 
         //TODO: set parallelism for more: threads == tasks
-        builder.setSpout("spout", new KafkaTweetsSpout(languagesToWatch, zookeeperURI, topic), 1);
-        builder.setBolt("windows", new WindowAssignerBolt(windowSizeSeconds, windowAdvanceSeconds), 8).shuffleGrouping("spout");
-        builder.setBolt("newWindowNotifier", new NewWindowNotifierBolt(languagesToWatch), 8).shuffleGrouping("windows");
-        builder.setBolt("counter", new HashtagCountBolt(3, maxWindows, storagePath, logSuffix))
+//        builder.setSpout("spout", new KafkaTweetsSpout(languagesToWatch, zookeeperURI, topic), 1);
+        builder.setSpout("spout", new FakeTweetsSpout(languagesToWatch), 1);
+        builder.setBolt("windows", new WindowAssignerBolt(windowSizeSeconds, windowAdvanceSeconds), 1).shuffleGrouping("spout");
+        builder.setBolt("newWindowNotifier", new NewWindowNotifierBolt(languagesToWatch), 1).shuffleGrouping("windows");
+        builder.setBolt("counter", new HashtagCountBolt(3, maxWindows, storagePath, logSuffix), languagesToWatch.length)
                 .fieldsGrouping("newWindowNotifier", new Fields("lang"))
                 .setNumTasks(languagesToWatch.length);
 
         Config conf = new Config();
-        conf.setNumWorkers(3);
+        conf.setNumWorkers(4);
         conf.setDebug(true);
 
         //TODO: submit to running storm topology

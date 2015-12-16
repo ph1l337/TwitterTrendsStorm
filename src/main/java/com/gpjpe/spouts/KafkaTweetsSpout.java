@@ -28,7 +28,7 @@ public class KafkaTweetsSpout extends BaseRichSpout {
     private String topic;
 
     public KafkaTweetsSpout(String[] languagesToWatch, String zookeeperURI, String topic) {
-        this.languagesToWatch = new HashSet<>();
+        this.languagesToWatch = new HashSet<String>();
         this.languagesToWatch.addAll(Arrays.asList(languagesToWatch));
         this.firstTweetTimestamp = UNSET;
         this.zookeeperURI = zookeeperURI;
