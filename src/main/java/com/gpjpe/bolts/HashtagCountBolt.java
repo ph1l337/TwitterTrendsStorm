@@ -10,8 +10,19 @@ import com.gpjpe.domain.HashtagCountComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.OutputStreamWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
+
 
 public class HashtagCountBolt extends BaseRichBolt {
 
@@ -20,25 +31,18 @@ public class HashtagCountBolt extends BaseRichBolt {
     private static final int DEFAULT_TOP_HASH_TAG_COUNT = 3;
 
     private String outputFolder;
-    private Long[] currentWindows;
     private Map<String, Map<Long, Map<String, Long>>> languageWindowHashTagCountMap;
-    private int maxWindows;
     private String logSuffix;
     private int numberOfTopHashTags;
     private Set<String> languages;
+    private int _taskId;
 
     private OutputCollector _collector;
-    private String _componentId;
 
-    //TODO: assume more than one language present
-
-    public HashtagCountBolt(int numberOfTopHashTags, int maxWindows, String outputFolder, String logSuffix) {
+    public HashtagCountBolt(int numberOfTopHashTags, String outputFolder, String logSuffix) {
         this.numberOfTopHashTags = numberOfTopHashTags;
         this.outputFolder = outputFolder;
-        this.currentWindows = null;
         this.languageWindowHashTagCountMap = new HashMap<>();
-        this.maxWindows = maxWindows;
-        this.currentWindows = new Long[maxWindows];
         this.logSuffix = logSuffix;
         this.languages = new HashSet<>();
     }
@@ -46,7 +50,7 @@ public class HashtagCountBolt extends BaseRichBolt {
 
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this._collector = outputCollector;
-        this._componentId = topologyContext.getThisComponentId();
+        this._taskId = topologyContext.getThisTaskId();
     }
 
     private void updateHashTagCount(String language, Long window, String hashTag) {
@@ -76,7 +80,6 @@ public class HashtagCountBolt extends BaseRichBolt {
     }
 
     private void writeWindowToFile(Long window) {
-        //Is this empty?
 
         BufferedWriter writer = null;
         List<HashtagCount> hashTagCountList;
@@ -89,10 +92,10 @@ public class HashtagCountBolt extends BaseRichBolt {
             windowHashTagCountMap = this.languageWindowHashTagCountMap.get(language);
             hashTagCountMap = windowHashTagCountMap.get(window);
 
-            //language has no hashtags for this window
             sb = new StringBuilder();
             sb.append(window).append(",").append(language);
 
+            //language has no hashtags for this window
             if (hashTagCountMap == null) {
 
                 for (int i = 0; i < numberOfTopHashTags; i++) {
@@ -167,67 +170,46 @@ public class HashtagCountBolt extends BaseRichBolt {
 
     public void execute(Tuple tuple) {
 
-        //handle signal to flush
-
         String tupleLanguage = (String) tuple.getValueByField("lang");
         String tupleHashTag = (String) tuple.getValueByField("hashtag");
         Long[] tupleWindows = (Long[]) tuple.getValueByField("windows");
+        Long windowToFlush = (Long) tuple.getValueByField("windowToFlush");
 
-        if (!this.languages.contains(tupleLanguage)) {
+        //handle signal to flush
+        if (windowToFlush != null && tupleHashTag == null) {
 
-            this.languages.add(tupleLanguage);
+            this.writeWindowToFile(windowToFlush);
 
+            //delete window from hashMap
+            for (String language : this.languageWindowHashTagCountMap.keySet()) {
+                LOGGER.info(
+                        String.format("Removing window [%s] for language [%s]",
+                                windowToFlush,
+                                language)
+                );
+
+                this.languageWindowHashTagCountMap.get(language).remove(windowToFlush);
+            }
+        } else {
+            //update counts
+            if (tupleHashTag != null) {
+                for (Long window : tupleWindows) {
+
+                    //simply update counts
+                    this.updateHashTagCount(tupleLanguage, window, tupleHashTag);
+                }
+            }
+        }
+
+        if (!this.languages.contains(tupleLanguage)){
             LOGGER.info(
                     String.format(
-                            "Bolt [%s] added language [%s]. Now running for languages: %s",
-                            _componentId,
+                            "Task %d has added languague %s, now handling %s",
+                            this._taskId,
                             tupleLanguage,
                             this.languages
                     )
             );
-        }
-
-        //compare local window with tuple
-        //if first value changed, flush old window (if size > 1)
-        if (this.currentWindows[0] == null) {
-            System.arraycopy(tupleWindows, 0, this.currentWindows, 0, tupleWindows.length);
-        }
-
-        if (this.currentWindows[0].compareTo(tupleWindows[0]) != 0) {
-
-            if (this.currentWindows[maxWindows - 1] != null) {
-                //flush old window
-                LOGGER.info(
-                        String.format("Window changed, flushing last window [%s]", this.currentWindows[maxWindows - 1]
-                        )
-                );
-
-                //map for this window does not exist?
-                this.writeWindowToFile(this.currentWindows[maxWindows - 1]);
-
-                //delete window from hashMap
-                for (String language : this.languageWindowHashTagCountMap.keySet()) {
-                    LOGGER.info(
-                            String.format("Removing window [%s] for language [%s]",
-                                    this.currentWindows[maxWindows - 1],
-                                    language)
-                    );
-
-                    this.languageWindowHashTagCountMap.get(language).remove(this.currentWindows[maxWindows - 1]);
-                }
-            }
-
-            //update current windows
-            System.arraycopy(tupleWindows, 0, this.currentWindows, 0, tupleWindows.length);
-        }
-
-        //update counts
-        if (tupleHashTag != null) {
-            for (Long window : tupleWindows) {
-
-                //simply update counts
-                this.updateHashTagCount(tupleLanguage, window, tupleHashTag);
-            }
         }
 
         //ack tuple

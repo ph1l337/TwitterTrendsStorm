@@ -42,19 +42,19 @@ public class TwitterTrendTopology {
                     String.format("Expected Window Configuration format is [Size,Slide], got %s", params[2]));
         }
 
-        if(!TopologyRunMode.modes().contains(params[6].toUpperCase())){
+        if (!TopologyRunMode.modes().contains(params[6].toUpperCase())) {
             messages.add(
                     String.format("Mode should be either `local` or `remote`: %s", params[6])
             );
         }
 
-        if(!TopologyDataSource.modes().contains(params[7].toUpperCase())){
+        if (!TopologyDataSource.modes().contains(params[7].toUpperCase())) {
             messages.add(
                     String.format("Source should be either `internal` or `kafka`: %s", params[7])
             );
         }
 
-        if (!Arrays.asList(new String[]{"true", "false"}).contains(params[8].toLowerCase())){
+        if (!Arrays.asList(new String[]{"true", "false"}).contains(params[8].toLowerCase())) {
             messages.add(
                     String.format("Debug should be either `true` or `false`: %s", params[8])
             );
@@ -106,17 +106,15 @@ public class TwitterTrendTopology {
         String topic = appConfig.getProperty(ConfigParams.KAFKA_TOPIC, "TweetStream");
         int maxWindows = Utils.calcMaxAmountofWindows(windowSizeSeconds, windowAdvanceSeconds);
 
-
-        //TODO: DELETE FILES FOR EACH LANG BEFORE STARTING?
         if (source == TopologyDataSource.INTERNAL) {
             builder.setSpout("spout", new FakeTweetsSpout(languagesToWatch), 1);
-        }else {
+        } else {
             builder.setSpout("spout", new KafkaTweetsSpout(languagesToWatch, zookeeperURI, topic), 1);
         }
 
         builder.setBolt("windows", new WindowAssignerBolt(windowSizeSeconds, windowAdvanceSeconds), 1).shuffleGrouping("spout");
-        builder.setBolt("newWindowNotifier", new NewWindowNotifierBolt(languagesToWatch), 1).shuffleGrouping("windows");
-        builder.setBolt("counter", new HashtagCountBolt(3, maxWindows, storagePath, logSuffix), languagesToWatch.length)
+        builder.setBolt("newWindowNotifier", new NewWindowNotifierBolt(languagesToWatch, maxWindows), 1).shuffleGrouping("windows");
+        builder.setBolt("counter", new HashtagCountBolt(3, storagePath, logSuffix), languagesToWatch.length)
                 .fieldsGrouping("newWindowNotifier", new Fields("lang"))
                 .setNumTasks(languagesToWatch.length);
 
@@ -124,7 +122,7 @@ public class TwitterTrendTopology {
         conf.setNumWorkers(4);
         conf.setDebug(debug);
 
-        if (mode == TopologyRunMode.LOCAL){
+        if (mode == TopologyRunMode.LOCAL) {
             LocalCluster cluster = new LocalCluster();
             cluster.submitTopology(topologyName, conf, builder.createTopology());
 
@@ -135,7 +133,7 @@ public class TwitterTrendTopology {
             }
 
             cluster.shutdown();
-        }else {
+        } else {
             StormSubmitter.submitTopology(topologyName, conf, builder.createTopology());
         }
     }
