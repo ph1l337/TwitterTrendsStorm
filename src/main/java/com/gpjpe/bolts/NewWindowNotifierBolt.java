@@ -43,7 +43,9 @@ public class NewWindowNotifierBolt extends BaseRichBolt {
             System.arraycopy(tupleWindows, 0, this.currentWindows, 0, tupleWindows.length);
         }
 
-        if (this.currentWindows[0].compareTo(tupleWindows[0]) != 0) {
+
+        //tuple's top window is newer than current top window
+        if (this.currentWindows[0].compareTo(tupleWindows[0]) < 0) {
 
             if (this.currentWindows[maxWindows - 1] != null) {
 
@@ -74,15 +76,26 @@ public class NewWindowNotifierBolt extends BaseRichBolt {
 
             //update current windows
             System.arraycopy(tupleWindows, 0, this.currentWindows, 0, tupleWindows.length);
-        }
 
-        this._collector.emit(
-                new Values(
-                        tupleLanguage,
-                        tupleHashTag,
-                        tupleWindows,
-                        null)
-        );
+            this._collector.emit(
+                    new Values(
+                            tupleLanguage,
+                            tupleHashTag,
+                            tupleWindows,
+                            null)
+            );
+
+        } else if (this.currentWindows[0].compareTo(tupleWindows[0]) == 0) {
+
+            this._collector.emit(
+                    new Values(
+                            tupleLanguage,
+                            tupleHashTag,
+                            tupleWindows,
+                            null)
+            );
+        }
+        // else drop tuple
 
         this._collector.ack(tuple);
     }
