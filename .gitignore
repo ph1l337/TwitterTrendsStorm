@@ -3,3 +3,5 @@ log.txt*
 .idea/
 target/
 config.properties
+
+*.tar.gz

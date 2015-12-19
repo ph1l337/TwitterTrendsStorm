@@ -14,6 +14,8 @@ import java.util.Map;
 
 import com.gpjpe.helpers.Utils;
 
+
+@Deprecated
 public class NewWindowNotifierBolt extends BaseRichBolt {
     private static final Logger LOGGER = LoggerFactory.getLogger(NewWindowNotifierBolt.class.getName());
     private OutputCollector _collector;
