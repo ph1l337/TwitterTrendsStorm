@@ -74,6 +74,11 @@ public class HashtagCountBolt extends BaseRichBolt {
 
         WindowHashTagTally windowHashTagTally = this.windowHashTagTallyMap.get(language);
 
+        if (windowHashTagTally == null){
+            windowHashTagTally = new WindowHashTagTally();
+            this.windowHashTagTallyMap.put(language, windowHashTagTally);
+        }
+
         for(Long window: windowsToFlush) {
 
             LOGGER.info(
