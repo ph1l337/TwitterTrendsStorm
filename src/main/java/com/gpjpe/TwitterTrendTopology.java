@@ -133,10 +133,12 @@ public class TwitterTrendTopology {
             builder.setSpout("spout", new KafkaTweetsSpout(languagesToWatch, zookeeperURI, topic), 1);
         }
 
-        builder.setBolt("windows", new WindowAssignerBolt(windowSizeSeconds, windowAdvanceSeconds), 1).shuffleGrouping("spout");
-        builder.setBolt("newWindowNotifier", new NewWindowNotifierBolt(languagesToWatch, maxWindows), 1).shuffleGrouping("windows");
-        builder.setBolt("counter", new HashtagCountBolt(3, storagePath, logSuffix), languagesToWatch.length)
-                .fieldsGrouping("newWindowNotifier", new Fields("lang"))
+        builder.setBolt("windows", new WindowAssignerBolt(windowSizeSeconds, windowAdvanceSeconds), 1)
+                .shuffleGrouping("spout");
+//        builder.setBolt("newWindowNotifier", new NewWindowNotifierBolt(languagesToWatch, maxWindows), 1).shuffleGrouping("windows");
+        builder.setBolt("counter", new HashtagCountBolt(3, maxWindows, windowAdvanceSeconds, storagePath, logSuffix),
+                languagesToWatch.length)
+                .fieldsGrouping("windows", new Fields("lang"))
                 .setNumTasks(languagesToWatch.length);
 
         backtype.storm.Config conf = new backtype.storm.Config();
