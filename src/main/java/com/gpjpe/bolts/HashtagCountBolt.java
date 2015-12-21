@@ -86,7 +86,7 @@ public class HashtagCountBolt extends BaseRichBolt {
             );
 
             hashTagCountMap = windowHashTagTally.getWindowTally(window);
-            sb.append(window).append(",").append(language);
+            sb.append(window*1000).append(",").append(language);
 
             //language has no hashtags for this window
             if (hashTagCountMap == null) {
