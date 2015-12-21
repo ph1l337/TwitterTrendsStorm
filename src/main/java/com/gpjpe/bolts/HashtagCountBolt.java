@@ -131,9 +131,11 @@ public class HashtagCountBolt extends BaseRichBolt {
             File dir = new File(outputFolder);
             if (!dir.exists()) {
                 if (!dir.mkdirs()) {
-                    throw new RuntimeException(
-                            String.format("Couldn't create directory [%s] ", outputFolder)
-                    );
+                    if (!dir.exists()) {
+                        throw new RuntimeException(
+                                String.format("Couldn't create directory [%s] ", outputFolder)
+                        );
+                    }
                 }
             }
 
