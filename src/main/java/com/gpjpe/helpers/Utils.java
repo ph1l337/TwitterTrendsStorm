@@ -17,6 +17,7 @@ public final class Utils {
                 System.currentTimeMillis() / 1000L);
     }
 
+    @Deprecated
     public static long calcWindow(long windowLength_s, long initTimestamp, long timestamp) {
 
         long window;
@@ -31,19 +32,12 @@ public final class Utils {
         return window;
     }
 
-    public static Long[] calcWindows(long windowLengthSeconds, long windowAdvanceSeconds, long initTimestamp, long timestamp) {
+    public static Long[] calcWindows(long windowLengthSeconds, long windowAdvanceSeconds, long timestamp) {
 
         if (windowLengthSeconds < windowAdvanceSeconds) {
             throw new IllegalArgumentException(String.format("window length mustn't be smaller than window advance" +
                     "received: window length: %d, window advance: %d", windowLengthSeconds, windowLengthSeconds));
         }
-
-        if (initTimestamp > timestamp) {
-            throw new IllegalArgumentException(String.format("initTimestamp mustn't be higher than current timestamp" +
-                    "received: window length: %d, window advance: %d", windowLengthSeconds, windowAdvanceSeconds));
-        }
-
-        long relTimestamp = (timestamp - initTimestamp);
 
         int maxWindows = (int) ((windowLengthSeconds % windowAdvanceSeconds == 0) ?
                 windowLengthSeconds / windowAdvanceSeconds :
@@ -51,14 +45,14 @@ public final class Utils {
 
         ArrayList<Long> windowsList = new ArrayList<Long>();
 
-
-        long nextWindowStart = (relTimestamp / windowAdvanceSeconds + 1) * windowAdvanceSeconds;
+        long nextWindowStart = (timestamp / windowAdvanceSeconds + 1) * windowAdvanceSeconds;
 
         for (int i = 0; i < maxWindows; i++) {
             if (!(nextWindowStart - i * windowAdvanceSeconds <= 0)) {
                 windowsList.add(nextWindowStart - i * windowAdvanceSeconds);
             }
         }
+
         return windowsList.toArray(new Long[windowsList.size()]);
     }
 

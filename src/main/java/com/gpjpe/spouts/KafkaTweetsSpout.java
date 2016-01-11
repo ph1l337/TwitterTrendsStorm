@@ -23,8 +23,6 @@ public class KafkaTweetsSpout extends BaseRichSpout {
 
     private SpoutOutputCollector _collector;
     private Set<String> languagesToWatch;
-    private long firstTweetTimestamp;
-    private static final long UNSET = -1;
     private KafkaStreamReader streamReader;
     private String zookeeperURI;
     private String topic;
@@ -32,13 +30,12 @@ public class KafkaTweetsSpout extends BaseRichSpout {
     public KafkaTweetsSpout(String[] languagesToWatch, String zookeeperURI, String topic) {
         this.languagesToWatch = new HashSet<String>();
         this.languagesToWatch.addAll(Arrays.asList(languagesToWatch));
-        this.firstTweetTimestamp = UNSET;
         this.zookeeperURI = zookeeperURI;
         this.topic = topic;
     }
 
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(new Fields("lang", "hashtag", "timestamp", "initTimestamp"));
+        outputFieldsDeclarer.declare(new Fields("lang", "hashtag", "timestamp"));
     }
 
     public void open(Map map, TopologyContext topologyContext, SpoutOutputCollector spoutOutputCollector) {
@@ -63,12 +60,8 @@ public class KafkaTweetsSpout extends BaseRichSpout {
                 long timestamp = Long.parseLong(tuple[1].trim());
                 String hashTag = tuple[2].trim();
 
-                if(this.firstTweetTimestamp == UNSET){
-                    this.firstTweetTimestamp = timestamp;
-                }
-
                 if (this.languagesToWatch.contains(tweetLanguage)) {
-                    this._collector.emit(new Values(tweetLanguage, hashTag, timestamp, this.firstTweetTimestamp));
+                    this._collector.emit(new Values(tweetLanguage, hashTag, timestamp));
                 } else {
                     LOGGER.debug("Tweet is not of interest");
                 }

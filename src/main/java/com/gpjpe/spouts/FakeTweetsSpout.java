@@ -23,13 +23,13 @@ public class FakeTweetsSpout extends BaseRichSpout {
 
     private SpoutOutputCollector _collector;
     private Set<String> languagesToWatch;
-    private long firstTweetTimestamp;
-    private static final long UNSET = -1;
+//    private long firstTweetTimestamp;
+//    private static final long UNSET = -1;
 
     public FakeTweetsSpout(String[] languagesToWatch) {
         this.languagesToWatch = new HashSet<String>();
         this.languagesToWatch.addAll(Arrays.asList(languagesToWatch));
-        this.firstTweetTimestamp = UNSET;
+//        this.firstTweetTimestamp = UNSET;
     }
 
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
@@ -50,17 +50,12 @@ public class FakeTweetsSpout extends BaseRichSpout {
 
             Values tweet = Utils.tweet();
 
-            if (this.firstTweetTimestamp == UNSET) {
-                this.firstTweetTimestamp = (Long) tweet.get(2);
-            }
-
             if (this.languagesToWatch.contains((String) tweet.get(0))) {
                 this._collector.emit(
                         new Values(
                                 tweet.get(0),
                                 tweet.get(1),
-                                tweet.get(2),
-                                this.firstTweetTimestamp
+                                tweet.get(2)
                         )
                 );
             }
