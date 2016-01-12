@@ -8,6 +8,7 @@ import kafka.javaapi.consumer.ConsumerConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -106,13 +107,15 @@ public class KafkaStreamReader implements IStreamReader {
             ConsumerIterator<byte[], byte[]> it = stream.iterator();
             String message;
             while (it.hasNext()) {
-                message = new String(it.next().message());
                 try {
+                    message = new String(it.next().message(),"UTF-8");
                     queue.put(message);
+                    LOGGER.debug("Thread " + threadNumber + ": " + message);
                 } catch (InterruptedException e) {
                     LOGGER.error(e.toString());
+                } catch (UnsupportedEncodingException e) {
+                    LOGGER.error(e.toString());
                 }
-                LOGGER.debug("Thread " + threadNumber + ": " + message);
             }
             LOGGER.debug("Shutting down Thread: " + threadNumber);
         }
