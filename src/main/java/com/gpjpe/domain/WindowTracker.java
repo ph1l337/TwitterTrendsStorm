@@ -46,7 +46,7 @@ public class WindowTracker {
 
         if (this.lastTopWindow != null) {
             if (tupleTopWindow.equals(this.lastTopWindow)){
-                return null;
+                return new WindowRange(null, this.advance);
             }
         }
 
@@ -64,7 +64,7 @@ public class WindowTracker {
             }
 
             if (upperWindow < lowerWindow) {
-                return null;
+                return new WindowRange(null, this.advance);
             }
 
             range = Range.closed(lowerWindow, upperWindow);
