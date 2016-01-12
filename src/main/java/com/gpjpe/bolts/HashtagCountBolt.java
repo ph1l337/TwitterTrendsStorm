@@ -5,10 +5,7 @@ import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
-import com.gpjpe.domain.HashtagCount;
-import com.gpjpe.domain.HashtagCountComparator;
-import com.gpjpe.domain.WindowHashTagTally;
-import com.gpjpe.domain.WindowTracker;
+import com.gpjpe.domain.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +62,7 @@ public class HashtagCountBolt extends BaseRichBolt {
         }
     }
 
-    private void writeWindowsToFile(List<Long> windowsToFlush, String language) {
+    private void writeWindowsToFile(WindowRange windowsToFlush, String language) {
 
         BufferedWriter writer = null;
         StringBuilder sb =  new StringBuilder();
@@ -79,7 +76,7 @@ public class HashtagCountBolt extends BaseRichBolt {
             this.windowHashTagTallyMap.put(language, windowHashTagTally);
         }
 
-        for(Long window: windowsToFlush) {
+        for(long window = windowsToFlush.getRange().lowerEndpoint(); window <= windowsToFlush.getRange().upperEndpoint(); window += windowsToFlush.getAdvance()) {
 
             LOGGER.info(
                     String.format("Writing windows %d for language [%s] to file", window, language)
@@ -158,7 +155,8 @@ public class HashtagCountBolt extends BaseRichBolt {
                 LOGGER.error(e.toString());
             }
         }
-        for(Long window: windowsToFlush) {
+
+        for(long window = windowsToFlush.getRange().lowerEndpoint(); window <= windowsToFlush.getRange().upperEndpoint(); window += windowsToFlush.getAdvance()) {
             windowHashTagTally.removeWindow(window);
         }
     }
@@ -190,9 +188,11 @@ public class HashtagCountBolt extends BaseRichBolt {
             }
         }
 
-        List<Long> windowsToFlush = windowTracker.update(tupleWindows[0]);
+        WindowRange windowsToFlush = windowTracker.update(tupleWindows[0]);
 
-        this.writeWindowsToFile(windowsToFlush, tupleLanguage);
+        if (windowsToFlush.getRange() != null) {
+            this.writeWindowsToFile(windowsToFlush, tupleLanguage);
+        }
 
         this.updateHashTagCount(tupleLanguage, tupleWindows, tupleHashTag);
 

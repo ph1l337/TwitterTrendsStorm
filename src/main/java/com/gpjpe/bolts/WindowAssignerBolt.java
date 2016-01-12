@@ -45,7 +45,7 @@ public class WindowAssignerBolt extends BaseRichBolt {
     public void execute(Tuple tuple) {
         long timestamp = (Long) tuple.getValueByField("timestamp");
 
-        Long[] windows = Utils.calcWindows(windowLengthSeconds,windowAdvanceSeconds, timestamp);
+        Long[] windows = Utils.calcWindows(windowLengthSeconds, windowAdvanceSeconds, timestamp);
         _collector.emit(new Values(
                 tuple.getValueByField("lang"),
                 tuple.getValueByField("hashtag"),

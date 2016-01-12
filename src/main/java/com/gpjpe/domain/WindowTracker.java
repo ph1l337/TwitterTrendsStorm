@@ -1,9 +1,6 @@
 package com.gpjpe.domain;
 
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.google.common.collect.Range;
 
 public class WindowTracker {
 
@@ -11,10 +8,12 @@ public class WindowTracker {
     private Long lastTopWindow;
     private int maxWindows;
     private Long advance;
+    private Long firstWindow;
 
     public WindowTracker(int maxWindows, Long advance) {
         this.latestFlushedWindow = null;
         this.lastTopWindow = null;
+        this.firstWindow = null;
         this.maxWindows = maxWindows;
         this.advance = advance;
     }
@@ -35,42 +34,46 @@ public class WindowTracker {
         return advance;
     }
 
-    public List<Long> update(Long tupleTopWindow) {
+    public WindowRange update(Long tupleTopWindow) {
 
-        //TODO: is this the very latest window?
-        List<Long> windowsToFlush = new ArrayList<>();
-
-        if (this.lastTopWindow == null) {
-            this.lastTopWindow = tupleTopWindow;
-        }
-
-        Long upperWindow = tupleTopWindow - this.maxWindows * this.advance;
+        Range<Long> range;
+        Long upperWindow;
         Long lowerWindow;
 
-        //top most window to be flushed, first time
-        if (this.latestFlushedWindow == null) {
-            lowerWindow = this.advance;
+        if (this.firstWindow == null) {
+            this.firstWindow = tupleTopWindow;
+        }
 
-            if (lowerWindow > 0 && upperWindow > 0) {
-                windowsToFlush.add(lowerWindow);
+        if (this.lastTopWindow != null) {
+            if (tupleTopWindow.equals(this.lastTopWindow)){
+                return null;
             }
+        }
+
+        System.out.println("MEASURE" + this.maxWindows + this.advance);
+
+        upperWindow = tupleTopWindow - this.maxWindows * this.advance;
+
+        if (this.firstWindow > upperWindow) {
+            range = null;
         } else {
-            lowerWindow = this.latestFlushedWindow;
-        }
+            if (this.latestFlushedWindow == null) {
+                lowerWindow = this.firstWindow;
+            } else {
+                lowerWindow = this.latestFlushedWindow + this.advance;
+            }
 
-        while (upperWindow > lowerWindow) {
-            windowsToFlush.add(upperWindow);
-            upperWindow -= this.advance;
-        }
+            if (upperWindow < lowerWindow) {
+                return null;
+            }
 
-        if (windowsToFlush.size() > 0) {
-            this.latestFlushedWindow = tupleTopWindow - this.maxWindows * this.advance;
-        }
+            range = Range.closed(lowerWindow, upperWindow);
 
-        Collections.sort(windowsToFlush);
+            this.latestFlushedWindow = upperWindow;
+        }
 
         this.lastTopWindow = tupleTopWindow;
 
-        return windowsToFlush;
+        return new WindowRange(range, this.advance);
     }
 }
