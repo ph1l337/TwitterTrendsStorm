@@ -27,4 +27,12 @@ public class WindowRange {
         this.range = range;
         this.advance = advance;
     }
+
+    public static boolean isWithin(long timestamp, long assignedWindow, long windowSize, long advance){
+
+        long lower = assignedWindow - advance;
+        long upper = lower + windowSize;
+
+        return timestamp >= lower && timestamp < upper;
+    }
 }

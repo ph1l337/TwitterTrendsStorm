@@ -1,6 +1,8 @@
 package com.gpjpe.helpers;
 
 import backtype.storm.tuple.Values;
+import com.gpjpe.domain.WindowRange;
+import com.gpjpe.domain.WindowTracker;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -15,21 +17,6 @@ public final class Utils {
 
         return new Values(langs[random.nextInt(langs.length)], hashTags[random.nextInt(hashTags.length)],
                 System.currentTimeMillis() / 1000L);
-    }
-
-    @Deprecated
-    public static long calcWindow(long windowLength_s, long initTimestamp, long timestamp) {
-
-        long window;
-        long newTimestamp = (timestamp - initTimestamp);
-
-        if (newTimestamp >= 0) {
-            window = ((newTimestamp / windowLength_s) + 1) * windowLength_s;
-        } else {
-            window = (newTimestamp / windowLength_s) * windowLength_s;
-        }
-
-        return window;
     }
 
     public static Long[] calcWindows(long windowLengthSeconds, long windowAdvanceSeconds, long timestamp) {
@@ -49,21 +36,26 @@ public final class Utils {
 
         for (int i = 0; i < maxWindows; i++) {
             if (!(nextWindowStart - i * windowAdvanceSeconds <= 0)) {
-                windowsList.add(nextWindowStart - i * windowAdvanceSeconds);
+
+                boolean within = WindowRange.isWithin(timestamp, nextWindowStart - i * windowAdvanceSeconds, windowLengthSeconds, windowAdvanceSeconds);
+
+                if (within) {
+                    windowsList.add(nextWindowStart - i * windowAdvanceSeconds);
+                }
             }
         }
 
         return windowsList.toArray(new Long[windowsList.size()]);
     }
 
-    public static String Stringify(Object[] list, String seperator) {
+    public static String Stringify(Object[] list, String separator) {
 
         StringBuilder sb = new StringBuilder();
 
         for (int i = 0; i < list.length; i++) {
             sb.append(list[i].toString());
             if (i < list.length - 1) {
-                sb.append(seperator);
+                sb.append(separator);
             }
         }
 
